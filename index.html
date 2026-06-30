@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Mozambique Ecosystem Reference Sites — Expert Review</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ── Instructions modal ──────────────────────────────────────────── -->
+<div id="modal-overlay">
+  <div class="modal-card" id="modal-composition">
+    <h2>Welcome to the Ecosystem Reference Site Review</h2>
+    <p class="modal-subtitle">Mozambique · 146 ecosystem types · AlphaEarth biomass model</p>
+
+    <div class="modal-steps">
+      <div class="modal-step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <strong>Qualifying ecosystems (this view)</strong>
+          <p><b>Coloured</b> ecosystems (75) have reference sites with significantly
+          higher biomass than the surrounding disturbed landscape — these are our
+          validated reference ecosystems. <b>Dark grey</b> ecosystems did not qualify.
+          Click any polygon to see details.</p>
+        </div>
+      </div>
+      <div class="modal-step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <strong>Reference sites (next view)</strong>
+          <p>The hatched areas within each qualifying ecosystem show the actual
+          reference site patches — the least-disturbed areas used for comparison.
+          Switch using the buttons in the panel on the left.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-draw-tip">
+      <strong>✏️ How to leave feedback</strong>
+      In the top-left corner of the map you'll see a set of shape icons
+      (square, line, and point). Use these to draw around any area you want
+      to comment on — for example, a reference site that looks wrong or an
+      ecosystem boundary that seems off. A form will appear for you to
+      describe what you're seeing.
+    </div>
+
+    <div class="modal-footer">
+      <button id="modal-close-btn">Got it — let me explore</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Drawing tools callout ───────────────────────────────────────── -->
+<div id="draw-callout" class="hidden">
+  <span class="callout-arrow">👆</span>
+  <span><b>Drawing tools</b> — use the shape icons (square, line, or point)
+  in the top-left corner of the map to mark an area and leave feedback.</span>
+  <span class="callout-close" id="callout-close">✕</span>
+</div>
+
+<!-- ── Sidebar ─────────────────────────────────────────────────────── -->
+<div id="sidebar">
+  <h1>Ecosystem Reference Site Review</h1>
+  <p class="subtitle">Mozambique · Expert review map</p>
+
+  <!-- Instructions re-open button -->
+  <button class="instructions-btn" id="show-instructions-btn">
+    <span class="help-icon">?</span>
+    How does this work?
+  </button>
+
+  <!-- Mode tab buttons -->
+  <div class="mode-tabs">
+    <button class="mode-tab active" id="tab-composition" onclick="switchMode('composition')">
+      <span class="tab-num">1</span>
+      <span class="tab-label">Qualifying<br>ecosystems</span>
+    </button>
+    <button class="mode-tab" id="tab-reference" onclick="switchMode('reference')">
+      <span class="tab-num">2</span>
+      <span class="tab-label">Reference<br>sites</span>
+    </button>
+  </div>
+
+  <!-- Hidden radio inputs kept for JS compatibility -->
+  <input type="radio" name="reviewMode" id="modeComposition" value="composition" checked style="display:none"/>
+  <input type="radio" name="reviewMode" id="modeReference" value="reference" style="display:none"/>
+
+  <div class="field">
+    <label for="expertName">Your name</label>
+    <input id="expertName" type="text" placeholder="e.g. Jane Smith" />
+  </div>
+
+  <h2>Focus on an ecosystem type</h2>
+  <div class="field">
+    <label for="subgroupSelect">Ecosystem type</label>
+    <select id="subgroupSelect">
+      <option value="">All ecosystem types</option>
+    </select>
+  </div>
+
+  <div id="compositionPanel">
+    <h2>Layers</h2>
+    <div class="field checkbox">
+      <label><input type="checkbox" id="toggleEcosystems" checked /> Ecosystem boundaries</label>
+    </div>
+    <div class="field checkbox">
+      <label><input type="checkbox" id="toggleEcoLabels" /> Ecosystem labels</label>
+    </div>
+    <div class="field checkbox">
+      <label><input type="checkbox" id="toggleDistance" /> Distance to disturbance
+        <span style="font-size:0.78em; color:#666; display:block; margin-left:1.5em;">
+          <span style="background:linear-gradient(to right,#d73027,#fee08b,#1a9850); display:inline-block; width:80px; height:8px; vertical-align:middle; border-radius:3px;"></span>
+          0 km → 10+ km
+        </span>
+      </label>
+    </div>
+  </div>
+
+  <div id="referencePanel" style="display:none;">
+    <h2>Layers</h2>
+    <div class="field checkbox">
+      <label><input type="checkbox" id="toggleSubgroups" checked /> Ecosystem boundaries</label>
+    </div>
+    <div class="field checkbox">
+      <label><input type="checkbox" id="toggleLabels" /> Ecosystem labels</label>
+    </div>
+    <div class="field checkbox">
+      <label><input type="checkbox" id="toggleReferenceSites" checked /> Reference site patches</label>
+    </div>
+    <div class="field checkbox">
+      <label><input type="checkbox" id="toggleDistanceRef" /> Distance to disturbance
+        <span style="font-size:0.78em; color:#666; display:block; margin-left:1.5em;">
+          <span style="background:linear-gradient(to right,#d73027,#fee08b,#1a9850); display:inline-block; width:80px; height:8px; vertical-align:middle; border-radius:3px;"></span>
+          0 km → 10+ km
+        </span>
+      </label>
+    </div>
+
+    <h2>Legend</h2>
+    <div id="legend"></div>
+  </div>
+
+  <h2>Your submitted feedback</h2>
+  <div id="feedbackList"><p class="muted">No feedback submitted yet this session.</p></div>
+</div>
+
+<!-- ── Map ─────────────────────────────────────────────────────────── -->
+<div id="map"></div>
+
+<!-- ── Feedback form panel ─────────────────────────────────────────── -->
+<div id="feedbackForm" class="hidden">
+  <h3>Leave feedback</h3>
+  <div class="field">
+    <label>Ecosystem type(s) this relates to</label>
+    <div id="formSubgroups" class="readonly"></div>
+  </div>
+  <div class="field">
+    <label for="formCategory">What kind of issue is this?</label>
+    <select id="formCategory">
+      <optgroup label="Qualifying ecosystems" id="categoryComposition">
+        <option value="Should qualify">This ecosystem should qualify but doesn't</option>
+        <option value="Should not qualify">This ecosystem should not qualify but does</option>
+        <option value="Boundary issue">The ecosystem boundary looks wrong here</option>
+      </optgroup>
+      <optgroup label="Reference sites" id="categoryReference">
+        <option value="Unexpected reference site">This reference site looks disturbed or atypical</option>
+        <option value="Missing reference site">This area should be a reference site but isn't</option>
+      </optgroup>
+      <option value="General comment">General comment</option>
+    </select>
+  </div>
+  <div class="field">
+    <label for="formComment">Describe what you're seeing</label>
+    <textarea id="formComment" rows="4" placeholder="What looks wrong, and why?"></textarea>
+  </div>
+  <div class="field buttons">
+    <button id="formSubmit">Submit feedback</button>
+    <button id="formCancel" class="secondary">Cancel</button>
+  </div>
+  <p id="formStatus"></p>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+<script src="https://unpkg.com/leaflet.pattern@0.1.0/dist/leaflet.pattern.js"></script>
+<script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+
+<script>
+// ── Modal logic ─────────────────────────────────────────────────────
+document.getElementById('modal-close-btn').addEventListener('click', () => {
+  document.getElementById('modal-overlay').classList.add('hidden');
+  // Show drawing tools callout after modal closes
+  document.getElementById('draw-callout').classList.remove('hidden');
+});
+
+document.getElementById('show-instructions-btn').addEventListener('click', () => {
+  document.getElementById('modal-overlay').classList.remove('hidden');
+});
+
+document.getElementById('callout-close').addEventListener('click', () => {
+  document.getElementById('draw-callout').classList.add('hidden');
+});
+
+// ── Mode tab switching ───────────────────────────────────────────────
+function switchMode(mode) {
+  document.getElementById('tab-composition').classList.toggle('active', mode === 'composition');
+  document.getElementById('tab-reference').classList.toggle('active', mode === 'reference');
+  // Trigger the radio-based mode logic already in app.js
+  document.getElementById(mode === 'composition' ? 'modeComposition' : 'modeReference').checked = true;
+  document.getElementById(mode === 'composition' ? 'modeComposition' : 'modeReference')
+    .dispatchEvent(new Event('change'));
+}
+</script>
+</body>
+</html>
