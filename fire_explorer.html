@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Mozambique Fire Severity Explorer</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+/* ── Reset & base ──────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; color: #e8e4dc; background: #1a1e24; }
+
+/* ── Layout ────────────────────────────────────────────────────────── */
+#layout { display: flex; height: 100vh; }
+#sidebar {
+  width: 320px; min-width: 280px; max-width: 320px;
+  background: #1a1e24; overflow-y: auto; padding: 18px 16px 24px;
+  border-right: 1px solid #2e3540; flex-shrink: 0; z-index: 1000;
+  display: flex; flex-direction: column; gap: 18px;
+}
+#map { flex: 1; }
+
+/* ── Sidebar header ────────────────────────────────────────────────── */
+.site-title { font-size: 1.05rem; font-weight: 700; color: #f0ece4; line-height: 1.35; }
+.site-sub   { font-size: 0.75rem; color: #7a8495; margin-top: 3px; }
+.nav-link   { display: inline-block; margin-top: 6px; font-size: 0.72rem; color: #6b9fd4; text-decoration: none; }
+.nav-link:hover { text-decoration: underline; }
+
+/* ── Section labels ────────────────────────────────────────────────── */
+.section-label {
+  font-size: 0.68rem; font-weight: 700; letter-spacing: 0.09em;
+  text-transform: uppercase; color: #5a6478; border-bottom: 1px solid #2e3540;
+  padding-bottom: 5px;
+}
+
+/* ── Ecosystem select ──────────────────────────────────────────────── */
+select, input[type=range] { width: 100%; }
+select {
+  background: #242930; color: #e8e4dc; border: 1px solid #3a4250;
+  border-radius: 5px; padding: 7px 10px; font-size: 0.82rem;
+  appearance: none; cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%235a6478'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 10px center;
+}
+select:focus { outline: none; border-color: #6b9fd4; }
+
+/* ── Threshold sliders ─────────────────────────────────────────────── */
+.thresholds { display: flex; flex-direction: column; gap: 12px; }
+
+.slider-row { display: flex; flex-direction: column; gap: 4px; }
+.slider-header { display: flex; justify-content: space-between; align-items: center; }
+.slider-label  { font-size: 0.76rem; color: #9aa3b0; }
+.slider-val    { font-size: 0.76rem; font-weight: 700; color: #e8e4dc; min-width: 28px; text-align: right; }
+
+input[type=range] {
+  -webkit-appearance: none; appearance: none;
+  height: 4px; border-radius: 2px; background: #3a4250; outline: none; cursor: pointer;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 14px; height: 14px; border-radius: 50%;
+  background: #e8e4dc; border: 2px solid #6b9fd4; cursor: pointer;
+}
+input[type=range]::-moz-range-thumb {
+  width: 14px; height: 14px; border-radius: 50%;
+  background: #e8e4dc; border: 2px solid #6b9fd4; cursor: pointer;
+}
+
+/* ── Class legend + stats ──────────────────────────────────────────── */
+.class-legend { display: flex; flex-direction: column; gap: 6px; }
+
+.class-row {
+  display: grid;
+  grid-template-columns: 12px 1fr auto;
+  align-items: center;
+  gap: 8px;
+}
+.class-swatch {
+  width: 12px; height: 12px; border-radius: 2px; flex-shrink: 0;
+}
+.class-name { font-size: 0.78rem; color: #c8c4bc; }
+.class-pct  { font-size: 0.76rem; font-weight: 700; color: #e8e4dc; min-width: 36px; text-align: right; }
+
+/* Progress bars */
+.bar-track { height: 4px; background: #2e3540; border-radius: 2px; margin-top: 2px; grid-column: 1/-1; }
+.bar-fill  { height: 100%; border-radius: 2px; transition: width 0.2s ease; }
+
+/* ── Stats summary ─────────────────────────────────────────────────── */
+.stats-summary {
+  background: #242930; border-radius: 6px; padding: 10px 12px;
+  font-size: 0.75rem; color: #7a8495; line-height: 1.6;
+}
+.stats-summary strong { color: #c8c4bc; }
+
+/* ── Loading indicator ─────────────────────────────────────────────── */
+#loading {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+  background: rgba(26,30,36,0.92); color: #e8e4dc; padding: 16px 24px;
+  border-radius: 8px; font-size: 0.85rem; z-index: 9999;
+  border: 1px solid #3a4250; text-align: center; pointer-events: none;
+}
+#loading.hidden { display: none; }
+.spinner {
+  width: 24px; height: 24px; border: 3px solid #3a4250;
+  border-top-color: #6b9fd4; border-radius: 50%;
+  animation: spin 0.7s linear infinite; margin: 0 auto 8px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Map ───────────────────────────────────────────────────────────── */
+.leaflet-control-zoom a { background: #242930 !important; color: #e8e4dc !important; border-color: #3a4250 !important; }
+.leaflet-control-zoom a:hover { background: #2e3540 !important; }
+.leaflet-control-layers { background: #242930 !important; color: #e8e4dc !important; }
+.leaflet-control-layers label { color: #c8c4bc !important; }
+
+/* ── Ecosystem highlight tooltip ───────────────────────────────────── */
+.eco-tooltip {
+  background: #1a1e24; border: 1px solid #3a4250; border-radius: 4px;
+  color: #e8e4dc; font-size: 0.75rem; padding: 4px 8px; white-space: nowrap;
+}
+
+/* ── Class boundary indicator on map ──────────────────────────────── */
+#class-gradient {
+  position: absolute; bottom: 24px; right: 12px; z-index: 800;
+  background: rgba(26,30,36,0.9); border: 1px solid #3a4250;
+  border-radius: 6px; padding: 10px 12px; min-width: 200px;
+  pointer-events: none;
+}
+#class-gradient h4 { font-size: 0.7rem; color: #5a6478; letter-spacing: 0.07em; text-transform: uppercase; margin-bottom: 8px; }
+.grad-bar { height: 12px; border-radius: 3px; margin-bottom: 4px; }
+.grad-labels { display: flex; justify-content: space-between; font-size: 0.65rem; color: #7a8495; }
+</style>
+</head>
+<body>
+
+<div id="layout">
+
+<!-- ── Sidebar ─────────────────────────────────────────────────────── -->
+<div id="sidebar">
+
+  <div>
+    <div class="site-title">Mozambique Fire Severity Explorer</div>
+    <div class="site-sub">GABAM Landsat fire count 2001–2021 · 100 m</div>
+    <a class="nav-link" href="index.html">← Back to Reference Site Review</a>
+  </div>
+
+  <div>
+    <div class="section-label">Ecosystem</div>
+    <div style="margin-top:8px;">
+      <select id="ecoSelect">
+        <option value="">All ecosystems</option>
+      </select>
+    </div>
+  </div>
+
+  <div>
+    <div class="section-label" style="margin-bottom:10px;">Fire class thresholds</div>
+    <div class="thresholds">
+
+      <div class="slider-row">
+        <div class="slider-header">
+          <span class="slider-label">Unburned/Low  →  Moderate</span>
+          <span class="slider-val" id="val-t1">4</span>
+        </div>
+        <input type="range" id="t1" min="1" max="10" value="4" step="1" />
+      </div>
+
+      <div class="slider-row">
+        <div class="slider-header">
+          <span class="slider-label">Moderate  →  High</span>
+          <span class="slider-val" id="val-t2">8</span>
+        </div>
+        <input type="range" id="t2" min="2" max="14" value="8" step="1" />
+      </div>
+
+      <div class="slider-row">
+        <div class="slider-header">
+          <span class="slider-label">High  →  Very High</span>
+          <span class="slider-val" id="val-t3">12</span>
+        </div>
+        <input type="range" id="t3" min="3" max="18" value="12" step="1" />
+      </div>
+
+      <div class="slider-row">
+        <div class="slider-header">
+          <span class="slider-label">Very High  →  Extreme</span>
+          <span class="slider-val" id="val-t4">17</span>
+        </div>
+        <input type="range" id="t4" min="4" max="21" value="17" step="1" />
+      </div>
+
+    </div>
+  </div>
+
+  <div>
+    <div class="section-label" style="margin-bottom:10px;">Class breakdown</div>
+    <div class="class-legend" id="classLegend">
+      <!-- populated by JS -->
+    </div>
+  </div>
+
+  <div class="stats-summary" id="statsSummary">
+    Select an ecosystem to see area statistics.
+  </div>
+
+  <div style="margin-top:auto; padding-top:8px; font-size:0.68rem; color:#3a4250; line-height:1.6;">
+    Fire count = number of times a pixel burned 2001–2021 (GABAM 30 m Landsat, resampled to 1 km for display). Histograms computed at 100 m. Thresholds define class boundaries; defaults match the RLE assessment analysis.
+  </div>
+
+</div>
+
+<!-- ── Map ─────────────────────────────────────────────────────────── -->
+<div id="map" style="position:relative;">
+  <div id="loading">
+    <div class="spinner"></div>
+    Loading fire raster…
+  </div>
+
+  <div id="class-gradient">
+    <h4>Fire frequency classes</h4>
+    <div class="grad-bar" id="grad-bar"></div>
+    <div class="grad-labels" id="grad-labels"></div>
+  </div>
+</div>
+
+</div><!-- /layout -->
+
+<!-- Scripts -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/georaster@1.6.0/dist/georaster.browser.bundle.min.js"></script>
+<script src="https://unpkg.com/georaster-layer-for-leaflet@3.10.0/dist/georaster-layer-for-leaflet.min.js"></script>
+
+<script>
+// ── Class definitions ─────────────────────────────────────────────────
+const CLASS_NAMES   = ['Unburned / Low','Moderate','High','Very High','Extreme'];
+const CLASS_COLORS  = ['#2d6a4f','#74c476','#fd8d3c','#e6550d','#a63603'];
+const CLASS_OPACITY = 0.82;
+
+// ── Map setup ─────────────────────────────────────────────────────────
+const map = L.map('map', { zoomControl: true }).setView([-18, 35.5], 6);
+
+const esriSat = L.tileLayer(
+  'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+  { attribution: 'Tiles © Esri', maxZoom: 20 }
+).addTo(map);
+
+const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+  { attribution: '© OpenStreetMap contributors', maxZoom: 19 });
+
+L.control.layers({'Satellite':'#sat','OpenStreetMap':'#osm'}, null,
+  { position: 'bottomleft' }).addTo(map);
+// replace stubs with real layers after creation
+map.on('baselayerchange', e => {
+  if (e.name === 'Satellite') { if (!map.hasLayer(esriSat)) esriSat.addTo(map); osm.remove(); }
+  else { if (!map.hasLayer(osm)) osm.addTo(map); esriSat.remove(); }
+});
+
+// ── Ecosystem bounding boxes (WGS84: [minLng, minLat, maxLng, maxLat]) ──────
+const ECO_BOUNDS = {
+  "Zambezian Wet Miombo":              [30.5466,-20.8402,40.5516,-10.5424],
+  "Zambezian Dry Miombo":             [30.2194,-25.1636,40.6165,-11.1686],
+  "Southern African Dry Forest":      [30.2765,-26.8649,35.7629,-14.6062],
+  "African Subtropical Coastal Forest":[31.9752,-26.8517,38.582,-11.9781],
+  "East African Dry Coastal Forest":  [37.5154,-16.7298,40.8257,-10.5469],
+  "Southern African Dry Thicket":     [30.4198,-26.6777,39.2306,-11.2831],
+  "Zambezian Inselberg Woodland":     [32.9331,-19.5618,40.2306,-11.3464],
+  "Tropical Alluvial Savanna":        [33.202,-20.2527,40.4416,-10.4833],
+  "Eastern Highlands Grassland":      [32.7027,-20.0019,34.1343,-17.8351],
+  "Northern Highlands Grassland":     [34.1463,-15.4481,37.6909,-11.567],
+  "Tropical Dune Forest":             [33.5197,-25.199,40.7746,-10.4792],
+  "Tropical Riparian Forest":         [30.2119,-19.1213,40.433,-10.7198],
+  "Tropical Wetland Vegetation":      [35.1433,-18.0713,36.7369,-14.2391],
+  "Subtropical Riparian Forest":      [31.3076,-26.8548,34.6841,-20.6217],
+};
+
+// ── State ─────────────────────────────────────────────────────────────
+let thresholds = [4, 8, 12, 17];
+let pixelValues = null;   // Uint8Array of raw fire count values (row-major)
+let rasterW = 0, rasterH = 0;
+let rasterBounds = null;  // L.latLngBounds for the overlay
+let imageOverlay = null;
+let histograms   = {};
+let selectedEco  = '';
+
+// ── Color lookup table (0–25 → pre-parsed RGBA per threshold set) ─────
+// Built from CLASS_COLORS + CLASS_OPACITY as a Uint8Array for fast canvas writes
+function buildColorLUT() {
+  const a = Math.round(CLASS_OPACITY * 255);
+  const lut = new Uint8Array(26 * 4);
+  for (let v = 0; v <= 25; v++) {
+    let cls;
+    if      (v <= thresholds[0]) cls = 0;
+    else if (v <= thresholds[1]) cls = 1;
+    else if (v <= thresholds[2]) cls = 2;
+    else if (v <= thresholds[3]) cls = 3;
+    else                          cls = 4;
+    const hex = CLASS_COLORS[cls];
+    const i = v * 4;
+    lut[i]   = parseInt(hex.slice(1,3),16);
+    lut[i+1] = parseInt(hex.slice(3,5),16);
+    lut[i+2] = parseInt(hex.slice(5,7),16);
+    lut[i+3] = a;
+  }
+  return lut;
+}
+
+// ── Draw pixel values to canvas → blob URL → update imageOverlay ──────
+function renderOverlay() {
+  if (!pixelValues) return;
+  const canvas = document.createElement('canvas');
+  canvas.width  = rasterW;
+  canvas.height = rasterH;
+  const ctx  = canvas.getContext('2d');
+  const img  = ctx.createImageData(rasterW, rasterH);
+  const rgba = new Uint32Array(img.data.buffer);  // write 4 bytes at once
+  const lut  = buildColorLUT();
+  const nodata = 255;
+  const n = rasterW * rasterH;
+
+  // Build a 256-entry Uint32Array LUT (ABGR byte order on little-endian)
+  const lut32 = new Uint32Array(256);
+  for (let v = 0; v <= 25; v++) {
+    const i = v * 4;
+    // ImageData is RGBA in memory; Uint32 on little-endian reads as ABGR
+    lut32[v] = (lut[i+3] << 24) | (lut[i+2] << 16) | (lut[i+1] << 8) | lut[i];
+  }
+  // v >= 26 or v === nodata → transparent (lut32[v] stays 0)
+
+  for (let i = 0; i < n; i++) {
+    const v = pixelValues[i];
+    if (v < 26) rgba[i] = lut32[v];
+    // else transparent (already 0 from createImageData)
+  }
+  ctx.putImageData(img, 0, 0);
+
+  // Use blob URL to avoid large data: strings in the DOM
+  canvas.toBlob(blob => {
+    const url = URL.createObjectURL(blob);
+    if (imageOverlay) {
+      const oldUrl = imageOverlay._url;
+      imageOverlay.setUrl(url);
+      if (oldUrl && oldUrl.startsWith('blob:')) URL.revokeObjectURL(oldUrl);
+    } else {
+      imageOverlay = L.imageOverlay(url, rasterBounds, { opacity: 1, interactive: false });
+      imageOverlay.addTo(map);
+    }
+  }, 'image/png');
+}
+
+// ── Load COG once, store raw pixel values ─────────────────────────────
+document.getElementById('loading').classList.remove('hidden');
+
+fetch('data/fire_count_1km_cog.tif')
+  .then(r => r.arrayBuffer())
+  .then(ab => parseGeoraster(ab))
+  .then(gr => {
+    rasterW = gr.width;
+    rasterH = gr.height;
+    // gr.values[0] is Array<Uint8Array>, one per row — bulk-copy into flat buffer
+    const band = gr.values[0];
+    pixelValues = new Uint8Array(rasterW * rasterH);
+    for (let row = 0; row < rasterH; row++) {
+      pixelValues.set(band[row], row * rasterW);
+    }
+    rasterBounds = L.latLngBounds([gr.ymin, gr.xmin], [gr.ymax, gr.xmax]);
+    renderOverlay();
+    document.getElementById('loading').classList.add('hidden');
+    updateGradientBar();
+  })
+  .catch(e => {
+    document.getElementById('loading').innerHTML =
+      `<span style="color:#e65050">Failed to load raster: ${e.message}</span>`;
+  });
+
+// ── Load histograms + populate dropdown ───────────────────────────────
+fetch('data/fire_histograms.json')
+  .then(r => r.json())
+  .then(d => {
+    histograms = d;
+    const sel = document.getElementById('ecoSelect');
+    Object.keys(d).sort().forEach(name => {
+      const opt = document.createElement('option');
+      opt.value = name; opt.textContent = name; sel.appendChild(opt);
+    });
+  });
+
+// ── Slider logic ──────────────────────────────────────────────────────
+const sliders = ['t1','t2','t3','t4'];
+sliders.forEach((id, i) => {
+  const el = document.getElementById(id);
+  el.addEventListener('input', () => {
+    // enforce ordering t1 < t2 < t3 < t4
+    let vals = sliders.map(s => parseInt(document.getElementById(s).value));
+    for (let j = 0; j < 3; j++) {
+      if (vals[j+1] <= vals[j]) { vals[j+1] = vals[j]+1; document.getElementById(sliders[j+1]).value = vals[j+1]; }
+    }
+    thresholds = vals;
+    sliders.forEach((s,j) => { document.getElementById('val-'+s).textContent = vals[j]; });
+    refreshLayer();
+    updateStats();
+    updateGradientBar();
+  });
+});
+
+function refreshLayer() {
+  renderOverlay();
+}
+
+// ── Ecosystem select ──────────────────────────────────────────────────
+document.getElementById('ecoSelect').addEventListener('change', e => {
+  selectedEco = e.target.value;
+
+  // zoom to pre-computed ecosystem bounds
+  if (selectedEco && ECO_BOUNDS[selectedEco]) {
+    const b = ECO_BOUNDS[selectedEco];
+    map.fitBounds([[b[1], b[0]], [b[3], b[2]]], { padding: [30, 30] });
+  } else {
+    map.setView([-18, 35.5], 6);
+  }
+
+  updateStats();
+});
+
+// ── Stats panel ───────────────────────────────────────────────────────
+function updateStats() {
+  const legend = document.getElementById('classLegend');
+  const summary = document.getElementById('statsSummary');
+  legend.innerHTML = '';
+
+  const eco  = selectedEco;
+  const hist = eco && histograms[eco] ? histograms[eco] : null;
+
+  // compute class pixel counts from histogram
+  let classCounts = new Array(5).fill(0);
+  let total = 0;
+
+  if (hist) {
+    const counts = hist.counts;   // index = fire count value 0..25
+    total = hist.total;
+    for (let v = 0; v <= 25; v++) {
+      const cls = getClass(v);
+      classCounts[cls] += counts[v] || 0;
+    }
+  }
+
+  // build class labels from current thresholds
+  const labels = [
+    `0 – ${thresholds[0]} fires`,
+    `${thresholds[0]+1} – ${thresholds[1]} fires`,
+    `${thresholds[1]+1} – ${thresholds[2]} fires`,
+    `${thresholds[2]+1} – ${thresholds[3]} fires`,
+    `> ${thresholds[3]} fires`,
+  ];
+
+  CLASS_NAMES.forEach((name, i) => {
+    const pct = total > 0 ? (classCounts[i]/total*100) : null;
+    const pctStr = pct != null ? pct.toFixed(1)+'%' : '—';
+    const barW   = pct != null ? pct.toFixed(1)+'%' : '0%';
+
+    legend.innerHTML += `
+      <div class="class-row">
+        <div class="class-swatch" style="background:${CLASS_COLORS[i]};"></div>
+        <div class="class-name">${name} <span style="font-size:0.7rem;color:#5a6478;">(${labels[i]})</span></div>
+        <div class="class-pct">${pctStr}</div>
+      </div>
+      <div class="bar-track" style="grid-column:1/-1;">
+        <div class="bar-fill" style="width:${barW};background:${CLASS_COLORS[i]};"></div>
+      </div>`;
+  });
+
+  if (hist) {
+    const area_ha = (total * 1).toFixed(0);  // 100m pixels = 1 ha each
+    const extreme = total>0 ? (classCounts[4]/total*100).toFixed(1) : '—';
+    const low     = total>0 ? (classCounts[0]/total*100).toFixed(1) : '—';
+    summary.innerHTML = `<strong>${eco}</strong><br>
+      ${Number(total).toLocaleString()} pixels sampled at 100 m (~${Number(area_ha).toLocaleString()} ha)<br>
+      <strong>${low}%</strong> Unburned/Low &nbsp;·&nbsp; <strong>${extreme}%</strong> Extreme`;
+  } else if (!eco) {
+    summary.textContent = 'Select an ecosystem to see area statistics.';
+  } else {
+    summary.textContent = `No histogram data for "${eco}".`;
+  }
+}
+
+// ── Gradient bar (map legend) ─────────────────────────────────────────
+function updateGradientBar() {
+  const bar    = document.getElementById('grad-bar');
+  const labels = document.getElementById('grad-labels');
+
+  // build gradient segments proportional to threshold spans (out of 21)
+  const MAX = 21;
+  const bounds = [0, thresholds[0], thresholds[1], thresholds[2], thresholds[3], MAX];
+  const segments = [];
+  for (let i = 0; i < 5; i++) {
+    const w = ((bounds[i+1] - bounds[i]) / MAX * 100).toFixed(1);
+    segments.push(`${CLASS_COLORS[i]} ${w}%`);
+  }
+  // build step gradient
+  let grad = 'linear-gradient(to right';
+  let acc = 0;
+  for (let i = 0; i < 5; i++) {
+    const w = ((bounds[i+1] - bounds[i]) / MAX * 100).toFixed(1);
+    grad += `, ${CLASS_COLORS[i]} ${acc}%, ${CLASS_COLORS[i]} ${(acc + parseFloat(w)).toFixed(1)}%`;
+    acc += parseFloat(w);
+  }
+  grad += ')';
+  bar.style.background = grad;
+
+  labels.innerHTML = `<span>0</span><span>${thresholds[0]}</span><span>${thresholds[1]}</span><span>${thresholds[2]}</span><span>${thresholds[3]}</span><span>21</span>`;
+}
+
+// ── Init ──────────────────────────────────────────────────────────────
+updateStats();
+updateGradientBar();
+</script>
+</body>
+</html>
