@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Mozambique Ecosystem Analysis — WCS SBAPP</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  min-height: 100vh;
+  background: #13161b;
+  color: #e8e4dc;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 52px;
+}
+
+.wcs-label {
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #5a6478;
+  margin-bottom: 14px;
+}
+
+.site-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #e8e4dc;
+  line-height: 1.2;
+  margin-bottom: 10px;
+}
+
+.site-sub {
+  font-size: 0.88rem;
+  color: #7a8495;
+  line-height: 1.5;
+}
+
+.cards {
+  display: flex;
+  gap: 20px;
+  max-width: 860px;
+  width: 100%;
+}
+
+.card {
+  flex: 1;
+  background: #1a1e24;
+  border: 1px solid #2e3540;
+  border-radius: 10px;
+  padding: 32px 28px 28px;
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  transition: border-color 0.18s, transform 0.18s, box-shadow 0.18s;
+  cursor: pointer;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.45);
+}
+
+.card.fire:hover  { border-color: #c0622a; }
+.card.sites:hover { border-color: #4a7fa5; }
+
+.card-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  font-size: 1.4rem;
+}
+
+.card.fire  .card-icon { background: rgba(192, 98, 42, 0.15); }
+.card.sites .card-icon { background: rgba(74, 127, 165, 0.15); }
+
+.card-label {
+  font-size: 0.65rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.card.fire  .card-label { color: #c0622a; }
+.card.sites .card-label { color: #4a7fa5; }
+
+.card-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #e8e4dc;
+  margin-bottom: 12px;
+  line-height: 1.3;
+}
+
+.card-desc {
+  font-size: 0.82rem;
+  color: #7a8495;
+  line-height: 1.6;
+  flex: 1;
+  margin-bottom: 24px;
+}
+
+.card-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 24px;
+}
+
+.meta-item {
+  font-size: 0.72rem;
+  color: #5a6478;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.meta-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.card.fire  .meta-dot { background: #c0622a; }
+.card.sites .meta-dot { background: #4a7fa5; }
+
+.card-cta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding-top: 20px;
+  border-top: 1px solid #2e3540;
+}
+
+.card.fire  .card-cta { color: #c0622a; }
+.card.sites .card-cta { color: #4a7fa5; }
+
+.arrow {
+  transition: transform 0.15s;
+}
+
+.card:hover .arrow {
+  transform: translateX(4px);
+}
+
+.footer {
+  margin-top: 48px;
+  font-size: 0.68rem;
+  color: #3a4250;
+  text-align: center;
+  line-height: 1.7;
+}
+
+@media (max-width: 600px) {
+  .cards { flex-direction: column; }
+  .site-title { font-size: 1.35rem; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="wcs-label">Wildlife Conservation Society · SBAPP · Mozambique</div>
+  <h1 class="site-title">Ecosystem Analysis Tools</h1>
+  <p class="site-sub">Spatial analysis of ecosystem condition and fire regimes<br>across Mozambique's 91 qualifying ecosystem types</p>
+</div>
+
+<div class="cards">
+
+  <a class="card fire" href="index.html">
+    <div class="card-icon">🌿</div>
+    <div class="card-label">Reference Site Review</div>
+    <h2 class="card-title">Ecosystem Reference Sites</h2>
+    <p class="card-desc">Explore qualifying ecosystems and their reference site patches — the least-disturbed areas used to establish biomass baselines. Leave expert feedback on boundaries and site selection.</p>
+    <div class="card-meta">
+      <div class="meta-item"><div class="meta-dot"></div>91 qualifying ecosystem types</div>
+      <div class="meta-item"><div class="meta-dot"></div>AlphaEarth AGB 2022 · Distance to disturbance</div>
+      <div class="meta-item"><div class="meta-dot"></div>Expert review &amp; feedback tool</div>
+    </div>
+    <div class="card-cta">Open reference site review <span class="arrow">→</span></div>
+  </a>
+
+  <a class="card sites" href="fire_explorer.html">
+    <div class="card-icon">🔥</div>
+    <div class="card-label">Fire Severity Explorer</div>
+    <h2 class="card-title">Fire Frequency Analysis</h2>
+    <p class="card-desc">Explore GABAM Landsat fire count data across ecosystem types. Filter by ecosystem, adjust fire class thresholds, and view aboveground biomass by fire frequency class.</p>
+    <div class="card-meta">
+      <div class="meta-item"><div class="meta-dot"></div>GABAM fire count 2001–2021 · 500 m</div>
+      <div class="meta-item"><div class="meta-dot"></div>Biomass by fire class · AlphaEarth AGB 2022</div>
+      <div class="meta-item"><div class="meta-dot"></div>Adjustable fire class thresholds</div>
+    </div>
+    <div class="card-cta">Open fire explorer <span class="arrow">→</span></div>
+  </a>
+
+</div>
+
+<div class="footer">
+  Mozambique SBAPP · WCS · Data: GABAM, AlphaEarth, IUCN GET
+</div>
+
+</body>
+</html>

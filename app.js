@@ -33,12 +33,16 @@ L.control.layers({ 'OpenStreetMap': osm, 'Satellite (Esri)': esriSat }, null, { 
 let distanceOverlay = null;
 
 Promise.all([
-  fetch('data/distance_to_disturbance_v3_bounds.json').then(r => r.json()),
+  fetch('data/distance_to_disturbance_v3_bounds.json?v=3').then(r => r.json()),
 ]).then(([b]) => {
   const bounds = [[b.south, b.west], [b.north, b.east]];
-  distanceOverlay = L.imageOverlay('data/distance_to_disturbance_v3.png', bounds, {
+  distanceOverlay = L.imageOverlay('data/distance_to_disturbance_v3.png?v=3', bounds, {
     opacity: 0.75,
     pane: 'distancePane',
+  });
+  distanceOverlay.on('load', () => {
+    const el = distanceOverlay.getElement();
+    if (el) el.style.imageRendering = 'pixelated';
   });
   // Not shown by default - user must check the toggle
 });
@@ -385,17 +389,15 @@ fetch('data/ecosystems.geojson')
           `
           : '';
 
-        layer.bindPopup(`
-          <b>${p.EnglishNam}</b><br/>
-          <span class="muted">Ecosystem group: ${p.group_label}</span>
-          <table>
-            <tr><td>Size:</td><td>${fmt(p.Size_ha)} ha</td></tr>
-            ${envRows}
-            <tr><td>Reference area:</td><td>${fmt(p.ref_area_km2)} km² (${fmt(p.pct_ref)}%)</td></tr>
-            ${biomassRows}
-          </table>
-          ${flagHtml}
-        `);
+        layer.on('click', () => {
+          showEcoInfo(p, envRows, biomassRows, flagHtml);
+          // Sync dropdown
+          const sel = document.getElementById('subgroupSelect');
+          if (sel.value !== p.EnglishNam) {
+            sel.value = p.EnglishNam;
+            focusEcotype(p.EnglishNam);
+          }
+        });
 
         // centroid label (not shown by default - only for the focused sub-group)
         try {
@@ -446,17 +448,39 @@ fetch('data/ecosystems.geojson')
     };
 
     const higherFeatures = geojson.features.filter(f => f.properties.flag === 'higher');
-    const otherFeatures = geojson.features.filter(f => f.properties.flag !== 'higher');
+
+    // Build a lookup from name → feature properties for the info panel
+    const ecoPropsByName = {};
+    geojson.features.forEach(f => { ecoPropsByName[f.properties.EnglishNam] = f.properties; });
 
     addGroupedOptions(higherFeatures, '');
-    if (otherFeatures.length) {
-      const divider = document.createElement('optgroup');
-      divider.label = '─── No validated reference site ───';
-      select.appendChild(divider);
-      addGroupedOptions(otherFeatures, '(no validated reference site)');
-    }
 
-    select.addEventListener('change', () => focusEcotype(select.value));
+    select.addEventListener('change', () => {
+      focusEcotype(select.value);
+      if (!select.value) {
+        document.getElementById('ecoInfoPanel').style.display = 'none';
+        return;
+      }
+      // Show sidebar info for the selected ecosystem
+      const p = ecoPropsByName[select.value];
+      if (!p) return;
+      const envRows = (p.MAP !== null && p.MAP !== undefined)
+        ? `<tr><td>Mean ann. precip:</td><td>${fmt(p.MAP)} mm</td></tr>
+           <tr><td>Dry-season EVI:</td><td>${fmt(p.EVI_dry)}</td></tr>
+           <tr><td>Elevation:</td><td>${fmt(p.elev_m)} m</td></tr>`
+        : `<tr><td colspan="2"><i>No environmental sub-grouping data</i></td></tr>`;
+      let flagHtml = '';
+      if (p.flag === 'lower') flagHtml = '<span class="flag-lower">⚠ Reference AGBD LOWER than non-reference</span>';
+      else if (p.flag === 'similar') flagHtml = '<span class="flag-similar">~ Reference AGBD similar to non-reference</span>';
+      else if (p.flag === 'higher') flagHtml = '<span class="flag-higher">Reference AGBD higher than non-reference (highlighted on map)</span>';
+      else flagHtml = '<span class="muted">No reference site identified for this type</span>';
+      const biomassRows = (p.ae_ref_mean !== null && p.ae_ref_mean !== undefined && !Number.isNaN(p.ae_ref_mean))
+        ? `<tr><td>Reference AGBD:</td><td>${fmt(p.ae_ref_mean)} Mg/ha</td></tr>
+           <tr><td>Non-ref. AGBD:</td><td>${fmt(p.ae_nonref_mean)} Mg/ha</td></tr>
+           <tr><td>Difference:</td><td>${fmt(p.ae_rel_diff_pct)}%</td></tr>`
+        : '';
+      showEcoInfo(p, envRows, biomassRows, flagHtml);
+    });
 
     setMode(currentMode);
   });
@@ -475,14 +499,11 @@ document.getElementById('toggleEcoLabels').addEventListener('change', e => {
 // ---------------------------------------------------------------------
 // Review-step (mode) switching
 // ---------------------------------------------------------------------
-let currentMode = 'composition';
+let currentMode = 'reference';
 
 function setMode(mode) {
   currentMode = mode;
   const isComposition = mode === 'composition';
-
-  document.getElementById('compositionPanel').style.display = isComposition ? '' : 'none';
-  document.getElementById('referencePanel').style.display = isComposition ? 'none' : '';
 
   // Reference site layers (and their patterns) - hidden entirely in
   // composition mode; in reference mode, focusEcotype() controls which
@@ -552,6 +573,23 @@ document.getElementById('toggleLabels').addEventListener('change', e => {
 function fmt(v) {
   if (v === null || v === undefined || Number.isNaN(v)) return 'n/a';
   return v;
+}
+
+function showEcoInfo(p, envRows, biomassRows, flagHtml) {
+  document.getElementById('ecoInfoName').textContent = p.EnglishNam;
+  document.getElementById('ecoInfoContent').innerHTML = `
+    <p class="muted" style="margin-bottom:8px;">Ecosystem group: ${p.group_label}</p>
+    <table class="info-table">
+      <tr><td>Size</td><td>${fmt(p.Size_ha)} ha</td></tr>
+      ${envRows}
+      <tr><td>Reference area</td><td>${fmt(p.ref_area_km2)} km² (${fmt(p.pct_ref)}%)</td></tr>
+      ${biomassRows}
+    </table>
+    <div style="margin-top:10px;">${flagHtml}</div>
+  `;
+  const panel = document.getElementById('ecoInfoPanel');
+  panel.style.display = '';
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 // ---------------------------------------------------------------------

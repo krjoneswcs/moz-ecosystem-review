@@ -6,7 +6,7 @@
 <title>Mozambique Ecosystem Reference Sites — Expert Review</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
-<link rel="stylesheet" href="style.css" />
+<link rel="stylesheet" href="style.css?v=2" />
 </head>
 <body>
 
@@ -14,14 +14,14 @@
 <div id="modal-overlay">
   <div class="modal-card" id="modal-composition">
     <h2>Welcome to the Ecosystem Reference Site Review</h2>
-    <p class="modal-subtitle">Mozambique · 146 ecosystem types · AlphaEarth biomass model</p>
+    <p class="modal-subtitle">Mozambique · AlphaEarth biomass model</p>
 
     <div class="modal-steps">
       <div class="modal-step">
         <div class="step-num">1</div>
         <div class="step-body">
-          <strong>Qualifying ecosystems (this view)</strong>
-          <p><b>Coloured</b> ecosystems (75) have reference sites with significantly
+          <strong>Qualifying ecosystems</strong>
+          <p><b>Coloured</b> ecosystems have reference sites with significantly
           higher biomass than the surrounding disturbed landscape — these are our
           validated reference ecosystems. <b>Dark grey</b> ecosystems did not qualify.
           Click any polygon to see details.</p>
@@ -30,21 +30,19 @@
       <div class="modal-step">
         <div class="step-num">2</div>
         <div class="step-body">
-          <strong>Reference sites (next view)</strong>
-          <p>The hatched areas within each qualifying ecosystem show the actual
-          reference site patches — the least-disturbed areas used for comparison.
-          Switch using the buttons in the panel on the left.</p>
+          <strong>Reference site patches</strong>
+          <p>Hatched areas within each qualifying ecosystem show the actual
+          reference site patches — the least-disturbed areas used to establish
+          biomass baselines.</p>
         </div>
       </div>
     </div>
 
     <div class="modal-draw-tip">
       <strong>✏️ How to leave feedback</strong>
-      In the top-left corner of the map you'll see a set of shape icons
-      (square, line, and point). Use these to draw around any area you want
-      to comment on — for example, a reference site that looks wrong or an
-      ecosystem boundary that seems off. A form will appear for you to
-      describe what you're seeing.
+      Use the shape icons (square, line, or point) in the top-left corner of the
+      map to draw around any area you want to comment on. A form will appear for
+      you to describe what you're seeing.
     </div>
 
     <div class="modal-footer">
@@ -63,6 +61,7 @@
 
 <!-- ── Sidebar ─────────────────────────────────────────────────────── -->
 <div id="sidebar">
+  <a href="landing.html" style="display:inline-flex;align-items:center;gap:4px;margin-bottom:14px;font-size:0.78rem;font-weight:600;color:#555;text-decoration:none;padding:5px 10px;background:#eee;border-radius:5px;border:1px solid #ddd;">← Back to tools</a>
   <h1>Ecosystem Reference Site Review</h1>
   <p class="subtitle">Mozambique · Expert review map</p>
 
@@ -72,21 +71,9 @@
     How does this work?
   </button>
 
-  <!-- Mode tab buttons -->
-  <div class="mode-tabs">
-    <button class="mode-tab active" id="tab-composition" onclick="switchMode('composition')">
-      <span class="tab-num">1</span>
-      <span class="tab-label">Qualifying<br>ecosystems</span>
-    </button>
-    <button class="mode-tab" id="tab-reference" onclick="switchMode('reference')">
-      <span class="tab-num">2</span>
-      <span class="tab-label">Reference<br>sites</span>
-    </button>
-  </div>
-
   <!-- Hidden radio inputs kept for JS compatibility -->
-  <input type="radio" name="reviewMode" id="modeComposition" value="composition" checked style="display:none"/>
-  <input type="radio" name="reviewMode" id="modeReference" value="reference" style="display:none"/>
+  <input type="radio" name="reviewMode" id="modeComposition" value="composition" style="display:none"/>
+  <input type="radio" name="reviewMode" id="modeReference" value="reference" checked style="display:none"/>
 
   <div class="field">
     <label for="expertName">Your name</label>
@@ -101,25 +88,7 @@
     </select>
   </div>
 
-  <div id="compositionPanel">
-    <h2>Layers</h2>
-    <div class="field checkbox">
-      <label><input type="checkbox" id="toggleEcosystems" checked /> Ecosystem boundaries</label>
-    </div>
-    <div class="field checkbox">
-      <label><input type="checkbox" id="toggleEcoLabels" /> Ecosystem labels</label>
-    </div>
-    <div class="field checkbox">
-      <label><input type="checkbox" id="toggleDistance" /> Distance to disturbance
-        <span style="font-size:0.78em; color:#666; display:block; margin-left:1.5em;">
-          <span style="background:linear-gradient(to right,#d73027,#fee08b,#1a9850); display:inline-block; width:80px; height:8px; vertical-align:middle; border-radius:3px;"></span>
-          0 km → 10+ km
-        </span>
-      </label>
-    </div>
-  </div>
-
-  <div id="referencePanel" style="display:none;">
+  <div id="referencePanel">
     <h2>Layers</h2>
     <div class="field checkbox">
       <label><input type="checkbox" id="toggleSubgroups" checked /> Ecosystem boundaries</label>
@@ -139,8 +108,16 @@
       </label>
     </div>
 
-    <h2>Legend</h2>
-    <div id="legend"></div>
+  </div>
+
+  <!-- Dummy elements for JS compatibility (composition panel references) -->
+  <input type="checkbox" id="toggleEcosystems" checked style="display:none"/>
+  <input type="checkbox" id="toggleEcoLabels" style="display:none"/>
+  <input type="checkbox" id="toggleDistance" style="display:none"/>
+
+  <div id="ecoInfoPanel" style="display:none;">
+    <h2 id="ecoInfoName"></h2>
+    <div id="ecoInfoContent"></div>
   </div>
 
   <h2>Your submitted feedback</h2>
@@ -148,7 +125,12 @@
 </div>
 
 <!-- ── Map ─────────────────────────────────────────────────────────── -->
-<div id="map"></div>
+<div id="map">
+  <div id="legend-float">
+    <div id="legend-title">Broad Category</div>
+    <div id="legend"></div>
+  </div>
+</div>
 
 <!-- ── Feedback form panel ─────────────────────────────────────────── -->
 <div id="feedbackForm" class="hidden">
@@ -206,15 +188,6 @@ document.getElementById('callout-close').addEventListener('click', () => {
   document.getElementById('draw-callout').classList.add('hidden');
 });
 
-// ── Mode tab switching ───────────────────────────────────────────────
-function switchMode(mode) {
-  document.getElementById('tab-composition').classList.toggle('active', mode === 'composition');
-  document.getElementById('tab-reference').classList.toggle('active', mode === 'reference');
-  // Trigger the radio-based mode logic already in app.js
-  document.getElementById(mode === 'composition' ? 'modeComposition' : 'modeReference').checked = true;
-  document.getElementById(mode === 'composition' ? 'modeComposition' : 'modeReference')
-    .dispatchEvent(new Event('change'));
-}
 </script>
 </body>
 </html>

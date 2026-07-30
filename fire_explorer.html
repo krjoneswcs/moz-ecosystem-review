@@ -33,6 +33,7 @@ html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Sego
   padding-bottom: 5px;
 }
 
+/* ── Ecosystem mode toggle (pill) ──────────────────────────────────── */
 /* ── Ecosystem select ──────────────────────────────────────────────── */
 select, input[type=range] { width: 100%; }
 select {
@@ -92,6 +93,15 @@ input[type=range]::-moz-range-thumb {
 }
 .stats-summary strong { color: #c8c4bc; }
 
+/* ── AGB chart ─────────────────────────────────────────────────────── */
+#agbSection { display: none; }
+#agbSection.visible { display: block; }
+#agbChart {
+  width: 100%; height: 130px; display: block;
+  border-radius: 4px; overflow: hidden;
+}
+.agb-note { font-size: 0.67rem; color: #3a4250; margin-top: 4px; text-align: right; }
+
 /* ── Loading indicator ─────────────────────────────────────────────── */
 #loading {
   position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
@@ -129,9 +139,86 @@ input[type=range]::-moz-range-thumb {
 #class-gradient h4 { font-size: 0.7rem; color: #5a6478; letter-spacing: 0.07em; text-transform: uppercase; margin-bottom: 8px; }
 .grad-bar { height: 12px; border-radius: 3px; margin-bottom: 4px; }
 .grad-labels { display: flex; justify-content: space-between; font-size: 0.65rem; color: #7a8495; }
+
+/* ── Intro modal ───────────────────────────────────────────────────── */
+#modal-overlay {
+  position: fixed; inset: 0; background: rgba(10,12,16,0.78);
+  z-index: 9000; display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+}
+#modal-overlay.hidden { display: none; }
+.modal-card {
+  background: #1e232c; border: 1px solid #2e3540; border-radius: 12px;
+  padding: 36px 36px 28px; max-width: 540px; width: 100%;
+}
+.modal-card h2 {
+  font-size: 1.2rem; font-weight: 700; color: #f0ece4;
+  margin-bottom: 6px; line-height: 1.3;
+}
+.modal-subtitle {
+  font-size: 0.78rem; color: #5a6478; margin-bottom: 24px;
+  letter-spacing: 0.03em;
+}
+.modal-steps { display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px; }
+.modal-step { display: flex; gap: 14px; align-items: flex-start; }
+.step-num {
+  width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+  background: #e8761a22; border: 1.5px solid #e8761a;
+  color: #e8761a; font-size: 0.72rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  margin-top: 1px;
+}
+.step-body { font-size: 0.82rem; color: #9aa3b0; line-height: 1.6; }
+.step-body strong { color: #c8c4bc; }
+.modal-divider {
+  border: none; border-top: 1px solid #2e3540; margin: 20px 0;
+}
+.modal-note {
+  font-size: 0.78rem; color: #5a6478; line-height: 1.6;
+  background: #151820; border-radius: 6px; padding: 12px 14px;
+  margin-bottom: 24px;
+}
+.modal-note strong { color: #7a8495; }
+.modal-close-btn {
+  width: 100%; padding: 11px; border: none; border-radius: 7px;
+  background: #e8761a; color: #fff; font-size: 0.85rem; font-weight: 700;
+  cursor: pointer; transition: background 0.15s;
+}
+.modal-close-btn:hover { background: #d06a14; }
 </style>
 </head>
 <body>
+
+<!-- ── Intro modal ──────────────────────────────────────────────────── -->
+<div id="modal-overlay">
+  <div class="modal-card">
+    <h2>Mozambique Fire Severity Explorer</h2>
+    <p class="modal-subtitle">GABAM Landsat fire count 2001–2021 · 91 ecosystem types · AlphaEarth AGB 2022</p>
+
+    <div class="modal-steps">
+      <div class="modal-step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <strong>Biomass–fire test</strong><br>
+          Each ecosystem shown here has a statistically significant difference in aboveground biomass between unburned and frequently-burned areas — confirming that fire frequency meaningfully predicts biomass condition within that ecosystem type.
+        </div>
+      </div>
+      <div class="modal-step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <strong>Climate similarity test</strong><br>
+          Areas with different fire frequencies are climatically similar within each ecosystem — ensuring that observed biomass differences across fire classes reflect fire regime, not underlying climate gradients.
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-note">
+      <strong>What this means:</strong> Only ecosystem types passing both tests are included. For these, fire frequency can serve as a credible proxy for ecosystem condition.
+    </div>
+
+    <button class="modal-close-btn" id="fire-modal-close">Explore the data →</button>
+  </div>
+</div>
 
 <div id="layout">
 
@@ -140,8 +227,8 @@ input[type=range]::-moz-range-thumb {
 
   <div>
     <div class="site-title">Mozambique Fire Severity Explorer</div>
-    <div class="site-sub">GABAM Landsat fire count 2001–2021 · 100 m</div>
-    <a class="nav-link" href="index.html">← Back to Reference Site Review</a>
+    <div class="site-sub">GABAM Landsat fire count 2001–2021 · 500 m</div>
+    <a class="nav-link" href="landing.html">← Back to tools</a>
   </div>
 
   <div>
@@ -151,6 +238,14 @@ input[type=range]::-moz-range-thumb {
         <option value="">All ecosystems</option>
       </select>
     </div>
+  </div>
+
+  <div>
+    <div class="section-label" style="margin-bottom:10px;">Fire layer</div>
+    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.82rem;color:#c8c4bc;">
+      <input type="checkbox" id="toggleFire" checked style="width:auto;accent-color:#6b9fd4;" />
+      Show fire frequency layer
+    </label>
   </div>
 
   <div>
@@ -203,6 +298,12 @@ input[type=range]::-moz-range-thumb {
     Select an ecosystem to see area statistics.
   </div>
 
+  <div id="agbSection">
+    <div class="section-label" style="margin-bottom:8px;">Biomass by fire class</div>
+    <canvas id="agbChart"></canvas>
+    <div class="agb-note">Median AGB (Mg/ha) · error bars = IQR · AlphaEarth 2022</div>
+  </div>
+
   <div style="margin-top:auto; padding-top:8px; font-size:0.68rem; color:#3a4250; line-height:1.6;">
     Fire count = number of times a pixel burned 2001–2021 (GABAM 30 m Landsat, resampled to 1 km for display). Histograms computed at 100 m. Thresholds define class boundaries; defaults match the RLE assessment analysis.
   </div>
@@ -227,8 +328,6 @@ input[type=range]::-moz-range-thumb {
 
 <!-- Scripts -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/georaster@1.6.0/dist/georaster.browser.bundle.min.js"></script>
-<script src="https://unpkg.com/georaster-layer-for-leaflet@3.10.0/dist/georaster-layer-for-leaflet.min.js"></script>
 
 <script>
 // ── Class definitions ─────────────────────────────────────────────────
@@ -247,40 +346,221 @@ const esriSat = L.tileLayer(
 const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
   { attribution: '© OpenStreetMap contributors', maxZoom: 19 });
 
-L.control.layers({'Satellite':'#sat','OpenStreetMap':'#osm'}, null,
+L.control.layers({'Satellite': esriSat, 'OpenStreetMap': osm}, null,
   { position: 'bottomleft' }).addTo(map);
-// replace stubs with real layers after creation
-map.on('baselayerchange', e => {
-  if (e.name === 'Satellite') { if (!map.hasLayer(esriSat)) esriSat.addTo(map); osm.remove(); }
-  else { if (!map.hasLayer(osm)) osm.addTo(map); esriSat.remove(); }
-});
+
+// (Broad category → individual member names loaded from ecosystem_hierarchy.json)
 
 // ── Ecosystem bounding boxes (WGS84: [minLng, minLat, maxLng, maxLat]) ──────
 const ECO_BOUNDS = {
-  "Zambezian Wet Miombo":              [30.5466,-20.8402,40.5516,-10.5424],
-  "Zambezian Dry Miombo":             [30.2194,-25.1636,40.6165,-11.1686],
-  "Southern African Dry Forest":      [30.2765,-26.8649,35.7629,-14.6062],
-  "African Subtropical Coastal Forest":[31.9752,-26.8517,38.582,-11.9781],
-  "East African Dry Coastal Forest":  [37.5154,-16.7298,40.8257,-10.5469],
-  "Southern African Dry Thicket":     [30.4198,-26.6777,39.2306,-11.2831],
-  "Zambezian Inselberg Woodland":     [32.9331,-19.5618,40.2306,-11.3464],
-  "Tropical Alluvial Savanna":        [33.202,-20.2527,40.4416,-10.4833],
-  "Eastern Highlands Grassland":      [32.7027,-20.0019,34.1343,-17.8351],
-  "Northern Highlands Grassland":     [34.1463,-15.4481,37.6909,-11.567],
-  "Tropical Dune Forest":             [33.5197,-25.199,40.7746,-10.4792],
-  "Tropical Riparian Forest":         [30.2119,-19.1213,40.433,-10.7198],
-  "Tropical Wetland Vegetation":      [35.1433,-18.0713,36.7369,-14.2391],
-  "Subtropical Riparian Forest":      [31.3076,-26.8548,34.6841,-20.6217],
+  "African Coral Rag Thicket": [40.5006, -15.0847, 40.839, -10.6617],
+  "African Subtropical Coastal Forest": [31.9752, -26.8517, 38.582, -11.9781],
+  "Amaramba Moist Miombo": [35.7315, -15.8745, 37.0128, -13.5831],
+  "Amatonga Lowland Semideciduous Forest": [33.3122, -19.7251, 33.9486, -18.9874],
+  "Angonia Escarpment Miombo": [32.6387, -15.703, 34.4603, -14.0249],
+  "Angonia Gneiss Montane Miombo": [33.8469, -15.0983, 34.6207, -14.4431],
+  "Angonia Montane Moist Miombo": [33.3709, -15.2535, 34.6041, -14.2571],
+  "Bangomatete Rhyolite Dry Woodland": [32.043, -16.6776, 33.4101, -16.0597],
+  "Banhine Inland Salt Pans": [32.9152, -24.5216, 34.9364, -21.9321],
+  "Barue Escarpment Miombo": [32.9644, -18.301, 34.3409, -17.1881],
+  "Barue Plateau Moist Miombo": [32.9887, -19.0032, 34.0743, -17.5209],
+  "Bilene Coastal Forest": [32.9312, -25.4284, 35.1179, -23.8321],
+  "Buzi-Pungwe Alluvial Vegetation": [33.202, -20.2527, 34.993, -19.0547],
+  "Canxixe Lowland Dry Woodland": [34.1801, -18.3004, 35.0791, -16.4742],
+  "Central Lowland Moist Forest": [32.7598, -20.5907, 35.4154, -17.4091],
+  "Central Mid-elevation Moist Forest": [32.7003, -20.3728, 35.4132, -17.4242],
+  "Central Montane Forest": [32.7791, -19.5039, 34.1133, -18.0218],
+  "Central Submontane Forest": [32.6982, -19.9185, 34.1343, -17.9734],
+  "Cheringoma Coastal Moist Miombo": [34.5769, -19.7889, 36.5461, -17.7436],
+  "Cheringoma Coastal Palm Savanna": [34.7529, -19.8013, 35.629, -19.0123],
+  "Cheringoma Escarpment Moist Miombo": [34.5351, -19.3277, 35.135, -18.022],
+  "Cheringoma Limestone Gorge Forest": [34.621, -18.846, 34.9251, -18.4408],
+  "Cheringoma Plateau Moist Miombo": [34.5601, -19.4673, 35.4334, -18.1575],
+  "Chimanimani Montane Grassland": [32.9463, -20.0019, 33.2124, -19.5883],
+  "Chimanimani Montane Miombo": [32.722, -20.5277, 33.2416, -19.1883],
+  "Chimoio Moist Miombo": [32.8576, -19.7199, 33.7602, -18.7869],
+  "Chitonga Montane Wooded Grassland": [35.0017, -11.979, 35.166, -11.567],
+  "Choa Escarpment Moist Miombo": [32.6996, -19.1705, 33.2497, -17.3587],
+  "Coastal Berlinia Miombo": [40.1181, -12.1865, 40.5516, -10.5424],
+  "Coastal Lagoons": [32.7009, -26.358, 35.0218, -24.6372],
+  "Dombe Basalt Dry Woodland": [32.4856, -20.9945, 34.2282, -19.2828],
+  "Dombe Escarpment Miombo": [33.2076, -20.2367, 34.5105, -19.1011],
+  "East African Dry Coastal Forest": [37.5154, -16.7298, 40.8257, -10.5469],
+  "Eastern Coastal Woodland": [32.6289, -26.8678, 40.8343, -10.4811],
+  "Eastern Highlands Grassland": [32.7027, -20.0019, 34.1343, -17.8351],
+  "Freshwater Lake": [32.3583, -26.8409, 40.5113, -11.5699],
+  "Freshwater Lakes": [32.3583, -26.8409, 40.5113, -11.5699],
+  "Gaza Sandy Guibourtia Woodland": [31.6041, -24.1073, 33.6658, -21.3369],
+  "Gorongosa Escarpment Moist Miombo": [33.9815, -18.5765, 35.4301, -17.4159],
+  "Gorongosa Foothills Moist Miombo": [33.587, -19.1872, 34.3726, -18.2369],
+  "Gorongosa Montane Grassland": [34.0245, -18.4508, 34.1343, -18.3093],
+  "Guro Dry Woodland": [32.8315, -17.8959, 34.3372, -16.1596],
+  "Gurue Plateau Moist Miombo": [35.8147, -15.943, 38.0469, -14.7992],
+  "Icuria Coastal Forest": [39.2666, -16.7298, 40.8257, -14.5263],
+  "Inhambane Coastal Miombo": [33.5095, -25.1636, 35.598, -22.6185],
+  "Inhambane Dune Thicket": [33.5197, -25.199, 35.6031, -21.2599],
+  "Inhamitanga Sand Forest": [34.3161, -18.4989, 35.7629, -17.4611],
+  "Inharrime Coastal Palm Savanna": [33.358, -25.2406, 35.421, -23.5904],
+  "Ironwood Dry Forest": [31.3148, -24.6772, 35.1426, -20.6764],
+  "Lake Niassa Lowland Miombo": [34.6064, -13.7477, 35.1506, -11.7837],
+  "Lebombo Summit Sourveld": [31.9313, -25.9975, 32.032, -25.806],
+  "Lebombo-KwaZulu Natal Scarp Forest": [31.9752, -26.7059, 32.1499, -25.7701],
+  "Lichinga Escarpment Moist Miombo": [34.7746, -14.5499, 37.7684, -11.6716],
+  "Lichinga Montane Moist Miombo": [34.8593, -14.1766, 37.6167, -12.0769],
+  "Lichinga Wooded Grassland": [35.0807, -12.9646, 35.7989, -12.6329],
+  "Licuati Sand Thicket": [32.4059, -26.6777, 32.6013, -26.1185],
+  "Limpopo Lowland Woodland": [32.0237, -25.8525, 33.9372, -23.3334],
+  "Limpopo Ridge Mopane Woodland": [31.3146, -24.1442, 32.661, -21.4118],
+  "Limpopo-Olifants Riverine Forest": [31.3076, -25.5732, 32.7875, -21.8578],
+  "Lowveld Savanna": [31.3298, -26.8641, 35.4014, -21.1716],
+  "Lugenda Lowland Dry Miombo": [36.5475, -13.2136, 38.7481, -11.257],
+  "Luia Basalt Mopane Woodland": [31.8537, -18.2425, 34.3683, -15.9958],
+  "Lupata Plateau Dry Woodland": [33.8764, -16.9422, 34.5615, -16.2828],
+  "Lupilichi Escarpment Miombo": [34.6981, -12.3497, 35.2554, -11.5669],
+  "Lurio Riverine Forest": [36.3269, -16.5304, 40.433, -13.8567],
+  "Lurio Valley Dry Miombo": [36.2208, -15.2183, 40.1899, -11.9215],
+  "Mabu Moist Miombo": [35.3734, -16.8943, 38.1114, -15.0989],
+  "Macanga Montane Moist Miombo": [32.6581, -15.6182, 34.603, -13.9998],
+  "Macomia Lowland Deciduous Forest": [39.6793, -12.7947, 40.5444, -11.0087],
+  "Madanda Rubber Sand Thicket": [33.1807, -21.0926, 34.4505, -19.5558],
+  "Madanda Sand Forest": [32.8909, -21.5036, 34.0466, -20.2309],
+  "Madanda Sandstone Dry Woodland": [32.6747, -21.1455, 34.1727, -19.5498],
+  "Makonde Bamboo Thicket": [38.351, -13.0242, 39.2306, -11.3403],
+  "Malema Granite Escarpment Miombo": [36.7706, -15.214, 38.7513, -14.1935],
+  "Manda Moist Miombo": [34.7005, -12.5719, 36.0178, -11.4106],
+  "Manica Montane Grassland": [32.7027, -19.685, 33.1505, -17.8351],
+  "Manica-Mulanje Mistbelt Forest": [32.6982, -19.9185, 38.3366, -12.6318],
+  "Maputaland Coastal Forest": [32.6852, -26.8517, 32.9724, -25.9926],
+  "Maputaland Coastal Wooded Grassland": [32.6289, -26.8678, 33.5097, -24.9758],
+  "Maputaland Dune Forest": [32.6799, -26.8575, 33.5233, -25.1819],
+  "Maputaland Sand Forest": [32.379, -26.8649, 32.7526, -26.4144],
+  "Maputo Alluvial Vegetation": [31.3058, -26.8657, 33.7782, -22.2868],
+  "Maputo Riverine Forest": [32.2015, -26.8548, 32.6399, -26.3253],
+  "Maravia Plateau Miombo": [30.4847, -15.5727, 32.7142, -14.2044],
+  "Maringue Sandstone Dry Woodland": [33.9536, -18.4878, 34.5042, -16.8019],
+  "Marrupa Plateau Moist Miombo": [36.177, -14.5472, 37.7506, -13.0152],
+  "Matondonvela Moist Miombo": [35.8261, -13.7102, 37.8673, -11.4851],
+  "Mazoe Gneiss Dry Thicket": [31.987, -16.9058, 33.0702, -16.2911],
+  "Mecufi Sandstone Dry Woodland": [40.479, -13.4741, 40.5873, -12.9503],
+  "Mecula Summit Grassland": [37.6155, -12.1062, 37.6909, -12.0103],
+  "Memba Dry Deciduous Lowland Forest": [40.1051, -15.5695, 40.6173, -13.5074],
+  "Memba Dry Miombo": [39.4423, -14.8895, 40.6165, -12.6321],
+  "Mocuba Moist Miombo": [35.8662, -17.4959, 39.5998, -15.5746],
+  "Monapo Klippe Dry Woodland": [39.9334, -15.0597, 40.3392, -14.573],
+  "Montepuez Plateau Moist Miombo": [38.1593, -13.8228, 40.1161, -12.1078],
+  "Mopane Woodland": [30.3364, -24.7262, 34.6816, -15.0564],
+  "Morrumbala Lowland Moist Miombo": [34.6076, -17.9909, 36.2856, -16.4536],
+  "Morrumbala Plateau Moist Miombo": [35.2608, -17.4857, 35.9864, -16.1573],
+  "Mossurize Escarpment Miombo": [32.4834, -20.8402, 33.3471, -20.0944],
+  "Mueda Dry Sand Thicket": [38.7377, -11.9464, 39.1277, -11.2831],
+  "Mueda Escarpment Miombo": [38.9098, -11.9568, 39.8903, -10.9267],
+  "Mueda Midslope Deciduous Forest": [39.3542, -12.3574, 40.1539, -11.0828],
+  "Mueda Mixed Dry Miombo": [38.3226, -12.9061, 39.82, -11.1686],
+  "Mueda Plateau Moist Forest": [39.304, -11.8512, 39.7475, -11.262],
+  "Mágoè Sandstone Mopane Woodland": [30.4202, -16.7788, 33.2736, -15.6369],
+  "Nametil Moist Miombo": [38.6213, -16.3114, 40.4445, -14.6351],
+  "Nampula Coastal Palm Savanna": [39.2461, -16.7558, 40.8343, -14.108],
+  "Nampula Granite Escarpment Miombo": [38.3721, -15.7096, 40.0834, -13.574],
+  "Nampula Ironwood Forest": [40.6463, -14.7626, 40.8182, -14.6788],
+  "Namuli Montane Grassland": [36.9278, -15.4481, 37.1546, -15.2564],
+  "Nangade Deciduous Newtonia Forest": [39.6037, -11.3197, 39.9358, -10.9264],
+  "Northern Coastal Dry Woodland": [39.985, -14.8947, 40.8256, -11.8423],
+  "Northern Highlands Grassland": [34.1463, -15.4481, 37.6909, -11.567],
+  "Northern Inselberg Forest": [37.5154, -12.8479, 39.7067, -12.2064],
+  "Northern Inselberg Woodland": [35.4094, -17.283, 40.2306, -11.3464],
+  "Northern Lebombo Bushveld": [31.4572, -25.4742, 32.0905, -22.8742],
+  "Northern Lowland Moist Forest": [35.6744, -16.7441, 38.582, -14.6164],
+  "Northern Mid-elevation Moist Forest": [35.6765, -16.6497, 38.3964, -11.9781],
+  "Northern Montane Forest": [35.6988, -16.4911, 37.2012, -14.9954],
+  "Northern Submontane Forest": [34.8969, -16.5009, 38.3366, -12.6318],
+  "Nungo Moist Miombo": [36.4705, -14.4375, 38.7677, -12.523],
+  "Nwambiya Sand Thicket": [31.3777, -23.3253, 32.1203, -21.9498],
+  "Nwambiya-Pumbe Sandy Bushveld": [31.3298, -25.1281, 32.689, -22.4819],
+  "Pande Sand Thicket": [34.789, -22.1462, 35.1676, -21.2825],
+  "Pangue Dry Miombo": [33.3722, -24.1598, 34.9315, -21.2252],
+  "Pebane Sandy Shrub Miombo": [36.5438, -17.7179, 39.6742, -16.3307],
+  "Ribaue Granite Escarpment Miombo": [37.5771, -15.7269, 39.1974, -14.5158],
+  "Rift Valley Floodplain Wooded Grassland": [34.2603, -19.1493, 35.5553, -16.445],
+  "Rift Valley Lowland Woodland": [34.0593, -19.7124, 35.7224, -17.6343],
+  "Rovuma Alluvial Vegetation": [38.8576, -12.02, 40.4416, -10.4833],
+  "Rovuma Basin Coastal Forest": [39.7156, -11.9977, 40.4721, -10.5469],
+  "Rovuma Coastal Moist Miombo": [39.9029, -11.7403, 40.3329, -10.7476],
+  "Rovuma Coastal Wooded Grassland": [40.3624, -12.4875, 40.6342, -10.4811],
+  "Rovuma Coral Rag Thicket": [40.5006, -15.0847, 40.839, -10.6617],
+  "Rovuma Dune Thicket": [39.6182, -16.5879, 40.7746, -10.4792],
+  "Rovuma Riverine Forest": [35.2353, -12.7591, 40.2385, -10.7198],
+  "Savanna-Highveld Salt Pan Halophytics": [32.9152, -24.5216, 34.9364, -21.9321],
+  "Save Alluvial Vegetation": [32.4092, -21.5909, 35.0726, -20.9291],
+  "Save Coastal Miombo": [34.224, -21.0741, 34.8619, -20.1],
+  "Save Coastal Palm Savanna": [34.2736, -21.899, 35.1591, -20.0218],
+  "Save Lowland Dry Woodland": [33.2967, -21.5296, 34.8365, -20.0046],
+  "Save Riverine Forest": [32.4203, -21.5983, 34.6841, -20.6217],
+  "Save Sand Forest": [32.0868, -23.1463, 34.8478, -20.5349],
+  "Save Valley Chalk Thicket": [33.9671, -21.5314, 34.717, -21.0738],
+  "Seashore Vegetation": [32.6766, -26.8565, 40.8284, -10.4742],
+  "Songo Granite Dry Woodland": [32.1838, -15.7244, 33.3544, -15.0028],
+  "Southern African Dry Forest": [30.2765, -26.8649, 35.7629, -14.6062],
+  "Southern African Dry Thicket": [30.4198, -26.6777, 39.2306, -11.2831],
+  "Southern Inselberg Woodland": [32.9331, -19.5618, 34.7718, -17.9843],
+  "Southern Lebombo Bushveld": [31.9338, -26.8515, 32.298, -25.4348],
+  "Southern Mopane Woodland": [31.778, -24.7262, 33.8471, -21.2542],
+  "Stormberg Dry Woodland": [32.3621, -21.5812, 33.0748, -20.9132],
+  "Subtropical Alluvial Savanna": [31.3058, -26.8657, 35.0726, -20.9291],
+  "Subtropical Coastal Salt Marshes": [32.321, -26.3468, 32.9764, -25.7547],
+  "Subtropical Dune Forest": [32.6799, -26.8575, 33.5233, -25.1819],
+  "Subtropical Riparian Forest": [31.3076, -26.8548, 34.6841, -20.6217],
+  "Subtropical Seashore Vegetation": [32.6766, -26.8565, 35.5544, -23.7741],
+  "Subtropical Swamp Forest": [32.702, -26.8631, 32.9026, -26.3249],
+  "Subtropical Zone Estuary": [32.321, -26.3468, 32.9764, -25.7547],
+  "Swahilian Savanna": [39.985, -14.8947, 40.8256, -11.8423],
+  "Swamp Forest": [32.702, -26.8631, 40.2109, -10.6979],
+  "Tembe Sandy Bushveld": [32.2903, -26.8641, 33.5572, -24.6776],
+  "Tete Gabbro Dry Woodland": [32.8808, -16.2574, 34.3586, -15.6311],
+  "Tete Mixed Dry Miombo": [30.2194, -15.8004, 34.3903, -14.2445],
+  "Tropical Alluvial Savanna": [33.202, -20.2527, 40.4416, -10.4833],
+  "Tropical Coastal Salt Marshes": [34.5715, -24.1007, 40.8201, -10.4813],
+  "Tropical Dune Forest": [33.5197, -25.199, 40.7746, -10.4792],
+  "Tropical Indian Ocean African Mangrove": [32.4201, -26.3384, 40.8381, -10.4745],
+  "Tropical Indian Ocean Mangrove": [32.4201, -26.3384, 40.8381, -10.4745],
+  "Tropical Riparian Forest": [30.2119, -19.1213, 40.433, -10.7198],
+  "Tropical Seashore Vegetation": [34.6891, -23.7396, 40.8284, -10.4742],
+  "Tropical Swamp Forest": [33.2534, -25.2825, 40.2109, -10.6979],
+  "Tropical Wetland Vegetation": [35.1433, -18.0713, 36.7369, -14.2391],
+  "Tropical Zone Estuary": [34.5715, -24.1007, 40.8201, -10.4813],
+  "Ulongue Plateau Grassland": [34.1463, -15.0112, 34.6224, -14.3847],
+  "Urronga Lowland Dry Woodland": [34.3841, -23.6781, 35.4014, -21.1716],
+  "Vilanculos Coastal Miombo": [34.8157, -22.7057, 40.338, -11.3088],
+  "Western Maputaland Clay Bushveld": [32.0113, -26.862, 32.4036, -24.4668],
+  "Zambezi Alluvial Vegetation": [34.0004, -17.991, 35.6969, -16.6016],
+  "Zambezi Chenier Dune Thicket": [34.589, -21.2455, 39.2599, -16.7379],
+  "Zambezi Delta Floodplain Grassland": [35.4647, -19.197, 38.0402, -17.2304],
+  "Zambezi Delta Lowland Forest": [35.1216, -18.9902, 37.7337, -17.1678],
+  "Zambezi Riverine Forest": [30.2119, -19.1213, 36.1314, -14.9882],
+  "Zambezi Valley Mopane Woodland": [30.3364, -16.9184, 34.6816, -15.0564],
+  "Zambezi Valley Sand Forest": [30.2765, -17.0992, 34.7125, -14.6062],
+  "Zambezian Dry Miombo": [30.2194, -25.1636, 40.6165, -11.1686],
+  "Zambezian Inselberg Woodland": [32.9331, -19.5618, 40.2306, -11.3464],
+  "Zambezian Papyrus Wetland": [35.1433, -18.0713, 36.7369, -14.2391],
+  "Zambezian Sand Thicket": [30.4198, -17.278, 35.2161, -15.6809],
+  "Zambezian Savanna": [32.043, -21.5812, 40.3392, -14.573],
+  "Zambezian Wet Miombo": [30.5466, -20.8402, 40.5516, -10.5424],
+  "Zumbo Montane Miombo": [30.5466, -15.324, 32.6226, -14.2318],
 };
 
 // ── State ─────────────────────────────────────────────────────────────
 let thresholds = [4, 8, 12, 17];
-let pixelValues = null;   // Uint8Array of raw fire count values (row-major)
+let pixelValues = null;
+let ecoMask    = null;    // Uint8Array of individual eco IDs (1–162; 0=outside)
+let hierarchy  = null;    // {individual:{id→name}, regional:{name→[members]}, individual_to_regional:{name→regional}}
+let indivIdMap = {};      // EnglishNam → numeric id
+let selectedEcoIds = new Set();
 let rasterW = 0, rasterH = 0;
-let rasterBounds = null;  // L.latLngBounds for the overlay
+let rasterBounds = null;
 let imageOverlay = null;
-let histograms   = {};
+let histograms        = {};  // regional:  {Regional_E → {counts, total}}
+let histogramsIndiv   = {};  // individual: {EnglishNam → {counts, total}}
 let selectedEco  = '';
+let ecoMode      = 'individual';
 
 // ── Color lookup table (0–25 → pre-parsed RGBA per threshold set) ─────
 // Built from CLASS_COLORS + CLASS_OPACITY as a Uint8Array for fast canvas writes
@@ -326,7 +606,10 @@ function renderOverlay() {
   }
   // v >= 26 or v === nodata → transparent (lut32[v] stays 0)
 
+  const filterEco = selectedEcoIds.size > 0;
   for (let i = 0; i < n; i++) {
+    if (ecoMask && ecoMask[i] === 0) continue;
+    if (filterEco && ecoMask && !selectedEcoIds.has(ecoMask[i])) continue;
     const v = pixelValues[i];
     if (v < 26) rgba[i] = lut32[v];
     // else transparent (already 0 from createImageData)
@@ -343,46 +626,137 @@ function renderOverlay() {
     } else {
       imageOverlay = L.imageOverlay(url, rasterBounds, { opacity: 1, interactive: false });
       imageOverlay.addTo(map);
+      // Prevent browser bilinear upscaling — keep pixels crisp when zoomed in
+      imageOverlay.getElement().style.imageRendering = 'pixelated';
     }
   }, 'image/png');
 }
 
-// ── Load COG once, store raw pixel values ─────────────────────────────
+// ── Load fire count PNG (R channel = fire count 0–25, A=0 for nodata) ─
+// Bounds hardcoded from rasterio — avoids needing a separate JSON fetch
+const RASTER_BOUNDS = L.latLngBounds(
+  [-26.869507, 29.983466],   // SW corner [lat, lng]  — Mercator-reprojected
+  [-10.467410, 41.487434]    // NE corner [lat, lng]
+);
+
 document.getElementById('loading').classList.remove('hidden');
 
-fetch('data/fire_count_1km_cog.tif')
-  .then(r => r.arrayBuffer())
-  .then(ab => parseGeoraster(ab))
-  .then(gr => {
-    rasterW = gr.width;
-    rasterH = gr.height;
-    // gr.values[0] is Array<Uint8Array>, one per row — bulk-copy into flat buffer
-    const band = gr.values[0];
-    pixelValues = new Uint8Array(rasterW * rasterH);
-    for (let row = 0; row < rasterH; row++) {
-      pixelValues.set(band[row], row * rasterW);
+const _img = new Image();
+_img.onload = function() {
+  // Draw to off-screen canvas and read pixel data
+  const _c = document.createElement('canvas');
+  _c.width = this.naturalWidth; _c.height = this.naturalHeight;
+  const _ctx = _c.getContext('2d');
+  _ctx.drawImage(this, 0, 0);
+  const raw = _ctx.getImageData(0, 0, _c.width, _c.height).data;
+
+  rasterW = _c.width;
+  rasterH = _c.height;
+  rasterBounds = RASTER_BOUNDS;
+
+  // R channel = fire count (0–25); A=0 means nodata → store as 255
+  pixelValues = new Uint8Array(rasterW * rasterH);
+  for (let i = 0, n = rasterW * rasterH; i < n; i++) {
+    pixelValues[i] = raw[i * 4 + 3] === 0 ? 255 : raw[i * 4];
+  }
+
+  // Load ecosystem mask after fire PNG is ready, then render both together
+  const _ecoImg = new Image();
+  _ecoImg.onload = function() {
+    const _ec = document.createElement('canvas');
+    _ec.width = this.naturalWidth; _ec.height = this.naturalHeight;
+    const _ectx = _ec.getContext('2d');
+    _ectx.drawImage(this, 0, 0);
+    const eraw = _ectx.getImageData(0, 0, _ec.width, _ec.height).data;
+    ecoMask = new Uint8Array(_ec.width * _ec.height);
+    for (let i = 0, n = _ec.width * _ec.height; i < n; i++) {
+      ecoMask[i] = eraw[i * 4 + 3] === 0 ? 0 : eraw[i * 4];
     }
-    rasterBounds = L.latLngBounds([gr.ymin, gr.xmin], [gr.ymax, gr.xmax]);
     renderOverlay();
     document.getElementById('loading').classList.add('hidden');
     updateGradientBar();
-  })
-  .catch(e => {
-    document.getElementById('loading').innerHTML =
-      `<span style="color:#e65050">Failed to load raster: ${e.message}</span>`;
+  };
+  _ecoImg.onerror = () => {
+    // mask failed — still render fire without clipping
+    renderOverlay();
+    document.getElementById('loading').classList.add('hidden');
+    updateGradientBar();
+  };
+  _ecoImg.src = 'data/ecosystem_id_500m.png';
+};
+_img.onerror = () => {
+  document.getElementById('loading').innerHTML =
+    '<span style="color:#e65050">Failed to load fire data</span>';
+};
+_img.src = 'data/fire_count_500m.png';
+
+// ── Load hierarchy + histograms + AGB data, then populate dropdown ────
+let agbData = {};  // EnglishNam|Regional_E → { "0":{median,q25,q75,n}, ... }
+
+Promise.all([
+  fetch('data/ecosystem_hierarchy.json').then(r => r.json()),
+  fetch('data/fire_histograms.json').then(r => r.json()),
+  fetch('data/fire_histograms_individual.json').then(r => r.json()),
+  fetch('data/agb_by_fire_class.json').then(r => r.json()),
+]).then(([hier, hRegional, hIndiv, agb]) => {
+  hierarchy       = hier;
+  histograms      = hRegional;
+  histogramsIndiv = hIndiv;
+  // flatten: individual names + _regional keys
+  const regional = agb['_regional'] || {};
+  agbData = { ...agb, ...regional };
+  delete agbData['_regional'];
+  indivIdMap = {};
+  Object.entries(hier.individual).forEach(([id, name]) => { indivIdMap[name] = parseInt(id); });
+  populateDropdown();
+});
+
+function populateDropdown() {
+  if (!hierarchy) return;
+  const sel = document.getElementById('ecoSelect');
+  const prev = sel.value;
+  sel.innerHTML = '<option value="">All ecosystems</option>';
+
+  Object.entries(hierarchy.regional).sort(([a],[b]) => a.localeCompare(b)).forEach(([regional, members]) => {
+    const grp = document.createElement('optgroup');
+    grp.label = regional;
+    members.slice().sort().forEach(name => {
+      const opt = document.createElement('option');
+      opt.value = name; opt.textContent = name; grp.appendChild(opt);
+    });
+    sel.appendChild(grp);
   });
 
-// ── Load histograms + populate dropdown ───────────────────────────────
-fetch('data/fire_histograms.json')
-  .then(r => r.json())
-  .then(d => {
-    histograms = d;
-    const sel = document.getElementById('ecoSelect');
-    Object.keys(d).sort().forEach(name => {
-      const opt = document.createElement('option');
-      opt.value = name; opt.textContent = name; sel.appendChild(opt);
+  if ([...sel.options].some(o => o.value === prev)) sel.value = prev;
+  else { sel.value = ''; applyEcoSelection(''); }
+}
+
+function applyEcoSelection(name) {
+  selectedEco = name;
+  selectedEcoIds.clear();
+  if (name) {
+    const members = [name];
+    members.forEach(m => {
+      const id = indivIdMap[m];
+      if (id != null) selectedEcoIds.add(id);
     });
-  });
+
+    // union of individual ECO_BOUNDS across members
+    const allBounds = members.map(m => ECO_BOUNDS[m]).filter(Boolean);
+    if (allBounds.length) {
+      const minLng = Math.min(...allBounds.map(b => b[0]));
+      const minLat = Math.min(...allBounds.map(b => b[1]));
+      const maxLng = Math.max(...allBounds.map(b => b[2]));
+      const maxLat = Math.max(...allBounds.map(b => b[3]));
+      map.fitBounds([[minLat, minLng], [maxLat, maxLng]], { padding: [30, 30] });
+    }
+  } else {
+    map.setView([-18, 35.5], 6);
+  }
+  renderOverlay();
+  updateStats();
+  updateAgbChart();
+}
 
 // ── Slider logic ──────────────────────────────────────────────────────
 const sliders = ['t1','t2','t3','t4'];
@@ -399,6 +773,7 @@ sliders.forEach((id, i) => {
     refreshLayer();
     updateStats();
     updateGradientBar();
+    updateAgbChart();
   });
 });
 
@@ -406,20 +781,30 @@ function refreshLayer() {
   renderOverlay();
 }
 
+// ── Fire layer toggle ─────────────────────────────────────────────────
+document.getElementById('toggleFire').addEventListener('change', e => {
+  if (imageOverlay) {
+    if (e.target.checked) {
+      imageOverlay.addTo(map);
+    } else {
+      imageOverlay.remove();
+    }
+  }
+});
+
 // ── Ecosystem select ──────────────────────────────────────────────────
 document.getElementById('ecoSelect').addEventListener('change', e => {
-  selectedEco = e.target.value;
-
-  // zoom to pre-computed ecosystem bounds
-  if (selectedEco && ECO_BOUNDS[selectedEco]) {
-    const b = ECO_BOUNDS[selectedEco];
-    map.fitBounds([[b[1], b[0]], [b[3], b[2]]], { padding: [30, 30] });
-  } else {
-    map.setView([-18, 35.5], 6);
-  }
-
-  updateStats();
+  applyEcoSelection(e.target.value);
 });
+
+// ── Classify a fire count value → class index 0–4 ────────────────────
+function getClass(v) {
+  if (v <= thresholds[0]) return 0;
+  if (v <= thresholds[1]) return 1;
+  if (v <= thresholds[2]) return 2;
+  if (v <= thresholds[3]) return 3;
+  return 4;
+}
 
 // ── Stats panel ───────────────────────────────────────────────────────
 function updateStats() {
@@ -427,20 +812,18 @@ function updateStats() {
   const summary = document.getElementById('statsSummary');
   legend.innerHTML = '';
 
-  const eco  = selectedEco;
-  const hist = eco && histograms[eco] ? histograms[eco] : null;
-
-  // compute class pixel counts from histogram
+  const eco = selectedEco;
   let classCounts = new Array(5).fill(0);
   let total = 0;
+  let mergedCounts = new Array(26).fill(0);
 
-  if (hist) {
-    const counts = hist.counts;   // index = fire count value 0..25
-    total = hist.total;
-    for (let v = 0; v <= 25; v++) {
-      const cls = getClass(v);
-      classCounts[cls] += counts[v] || 0;
+  if (eco) {
+    const h = histogramsIndiv[eco];
+    if (h) {
+      total = h.total;
+      for (let v = 0; v <= 25; v++) mergedCounts[v] = h.counts[v] || 0;
     }
+    for (let v = 0; v <= 25; v++) classCounts[getClass(v)] += mergedCounts[v];
   }
 
   // build class labels from current thresholds
@@ -468,12 +851,11 @@ function updateStats() {
       </div>`;
   });
 
-  if (hist) {
-    const area_ha = (total * 1).toFixed(0);  // 100m pixels = 1 ha each
-    const extreme = total>0 ? (classCounts[4]/total*100).toFixed(1) : '—';
-    const low     = total>0 ? (classCounts[0]/total*100).toFixed(1) : '—';
+  if (eco && total > 0) {
+    const extreme = (classCounts[4]/total*100).toFixed(1);
+    const low     = (classCounts[0]/total*100).toFixed(1);
     summary.innerHTML = `<strong>${eco}</strong><br>
-      ${Number(total).toLocaleString()} pixels sampled at 100 m (~${Number(area_ha).toLocaleString()} ha)<br>
+      ${Number(total).toLocaleString()} pixels at 100 m (~${Number(total).toLocaleString()} ha)<br>
       <strong>${low}%</strong> Unburned/Low &nbsp;·&nbsp; <strong>${extreme}%</strong> Extreme`;
   } else if (!eco) {
     summary.textContent = 'Select an ecosystem to see area statistics.';
@@ -509,9 +891,155 @@ function updateGradientBar() {
   labels.innerHTML = `<span>0</span><span>${thresholds[0]}</span><span>${thresholds[1]}</span><span>${thresholds[2]}</span><span>${thresholds[3]}</span><span>21</span>`;
 }
 
+// ── AGB chart ─────────────────────────────────────────────────────────
+// Aggregate per-fire-count AGB stats into current threshold-defined classes
+function aggregateAgbByClass(cntData) {
+  // cntData: { "0":{median,q25,q75,n}, "1":..., ..., "25":... }
+  // Returns array of 5 class objects (or null if no data)
+  const breaks = [0, thresholds[0], thresholds[1], thresholds[2], thresholds[3], 25];
+  const result = [];
+  for (let c = 0; c < 5; c++) {
+    const lo = c === 0 ? breaks[0] : breaks[c] + 1;
+    const hi = breaks[c + 1];
+    const meds = [], q25s = [], q75s = [];
+    let totalN = 0;
+    for (let v = lo; v <= hi; v++) {
+      const s = cntData[String(v)];
+      if (!s) continue;
+      meds.push(s.median); q25s.push(s.q25); q75s.push(s.q75);
+      totalN += s.n;
+    }
+    if (meds.length === 0) { result.push(null); continue; }
+    // Weighted-median approximation: simple median of medians (sufficient for display)
+    meds.sort((a,b)=>a-b); q25s.sort((a,b)=>a-b); q75s.sort((a,b)=>a-b);
+    const mid = i => i[Math.floor(i.length/2)];
+    result.push({ median: mid(meds), q25: mid(q25s), q75: mid(q75s), n: totalN });
+  }
+  return result;
+}
+
+function updateAgbChart() {
+  const section = document.getElementById('agbSection');
+  const canvas  = document.getElementById('agbChart');
+  const key = selectedEco;
+  const cntData = key ? agbData[key] : null;
+
+  if (!cntData || Object.keys(cntData).length === 0) {
+    section.classList.remove('visible');
+    return;
+  }
+  section.classList.add('visible');
+
+  const clsStats = aggregateAgbByClass(cntData);
+  // Only render classes that have data
+  const clsKeys = [0,1,2,3,4].filter(i => clsStats[i] !== null);
+  const values  = clsKeys.map(i => clsStats[i]);
+
+  // Canvas sizing
+  const dpr = window.devicePixelRatio || 1;
+  const W   = canvas.parentElement.clientWidth || 280;
+  const H   = 130;
+  canvas.width  = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.width  = W + 'px';
+  canvas.style.height = H + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+
+  // Layout
+  const padL = 36, padR = 8, padT = 10, padB = 28;
+  const plotW = W - padL - padR;
+  const plotH = H - padT - padB;
+
+  ctx.clearRect(0, 0, W, H);
+
+  // Y scale: span all q25–q75 + some margin
+  const allVals = values.flatMap(s => [s.q25, s.q75, s.median]);
+  const yMin = Math.max(0, Math.min(...allVals) * 0.85);
+  const yMax = Math.max(...allVals) * 1.12;
+  const yRange = yMax - yMin || 1;
+
+  const toY = v => padT + plotH * (1 - (v - yMin) / yRange);
+
+  // Grid lines
+  const nTicks = 4;
+  ctx.strokeStyle = '#2e3540';
+  ctx.lineWidth = 0.8;
+  ctx.fillStyle = '#5a6478';
+  ctx.font = `${9 * dpr / dpr}px -apple-system,sans-serif`;
+  ctx.textAlign = 'right';
+  for (let i = 0; i <= nTicks; i++) {
+    const v = yMin + (yRange * i / nTicks);
+    const y = toY(v);
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W - padR, y); ctx.stroke();
+    ctx.fillText(Math.round(v), padL - 4, y + 3.5);
+  }
+
+  // Y-axis label
+  ctx.save();
+  ctx.translate(9, padT + plotH / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#5a6478';
+  ctx.font = '9px -apple-system,sans-serif';
+  ctx.fillText('AGB (Mg/ha)', 0, 0);
+  ctx.restore();
+
+  const barW = Math.min(32, plotW / clsKeys.length * 0.55);
+  const gap  = plotW / clsKeys.length;
+
+  // Dynamic x-axis labels based on current thresholds
+  const breaks = [0, thresholds[0], thresholds[1], thresholds[2], thresholds[3], 25];
+  const clsLabels = [
+    `0–${breaks[1]}`,
+    `${breaks[1]+1}–${breaks[2]}`,
+    `${breaks[2]+1}–${breaks[3]}`,
+    `${breaks[3]+1}–${breaks[4]}`,
+    `>${breaks[4]}`,
+  ];
+
+  clsKeys.forEach((classIdx, i) => {
+    const s     = values[i];
+    const cx    = padL + gap * i + gap / 2;
+    const color = CLASS_COLORS[classIdx];
+
+    // IQR bar (Q25–Q75)
+    const yQ25 = toY(s.q25);
+    const yQ75 = toY(s.q75);
+    ctx.fillStyle = color + '55';
+    ctx.fillRect(cx - barW / 2, yQ75, barW, yQ25 - yQ75);
+
+    // Median line
+    const yMed = toY(s.median);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(cx - barW / 2, yMed); ctx.lineTo(cx + barW / 2, yMed); ctx.stroke();
+
+    // Median value label
+    ctx.fillStyle = '#c8c4bc';
+    ctx.font = '8.5px -apple-system,sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(s.median.toFixed(0), cx, yMed - 5);
+
+    // X-axis label
+    ctx.fillStyle = '#7a8495';
+    ctx.font = '8px -apple-system,sans-serif';
+    ctx.fillText(clsLabels[classIdx], cx, H - padB + 12);
+
+    // n label
+    ctx.fillStyle = '#3a4250';
+    ctx.font = '7px -apple-system,sans-serif';
+    ctx.fillText(`n=${s.n > 999 ? (s.n/1000).toFixed(1)+'k' : s.n}`, cx, H - padB + 22);
+  });
+}
+
 // ── Init ──────────────────────────────────────────────────────────────
 updateStats();
 updateGradientBar();
+
+document.getElementById('fire-modal-close').addEventListener('click', () => {
+  document.getElementById('modal-overlay').classList.add('hidden');
+});
 </script>
 </body>
 </html>
