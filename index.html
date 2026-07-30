@@ -3,191 +3,220 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Mozambique Ecosystem Reference Sites — Expert Review</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
-<link rel="stylesheet" href="style.css?v=2" />
+<title>Mozambique Ecosystem Analysis — WCS SBAPP</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  min-height: 100vh;
+  background: #13161b;
+  color: #e8e4dc;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 52px;
+}
+
+.wcs-label {
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #5a6478;
+  margin-bottom: 14px;
+}
+
+.site-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #e8e4dc;
+  line-height: 1.2;
+  margin-bottom: 10px;
+}
+
+.site-sub {
+  font-size: 0.88rem;
+  color: #7a8495;
+  line-height: 1.5;
+}
+
+.cards {
+  display: flex;
+  gap: 20px;
+  max-width: 860px;
+  width: 100%;
+}
+
+.card {
+  flex: 1;
+  background: #1a1e24;
+  border: 1px solid #2e3540;
+  border-radius: 10px;
+  padding: 32px 28px 28px;
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  transition: border-color 0.18s, transform 0.18s, box-shadow 0.18s;
+  cursor: pointer;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.45);
+}
+
+.card.fire:hover  { border-color: #c0622a; }
+.card.sites:hover { border-color: #4a7fa5; }
+
+.card-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  font-size: 1.4rem;
+}
+
+.card.fire  .card-icon { background: rgba(192, 98, 42, 0.15); }
+.card.sites .card-icon { background: rgba(74, 127, 165, 0.15); }
+
+.card-label {
+  font-size: 0.65rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.card.fire  .card-label { color: #c0622a; }
+.card.sites .card-label { color: #4a7fa5; }
+
+.card-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #e8e4dc;
+  margin-bottom: 12px;
+  line-height: 1.3;
+}
+
+.card-desc {
+  font-size: 0.82rem;
+  color: #7a8495;
+  line-height: 1.6;
+  flex: 1;
+  margin-bottom: 24px;
+}
+
+.card-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 24px;
+}
+
+.meta-item {
+  font-size: 0.72rem;
+  color: #5a6478;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.meta-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.card.fire  .meta-dot { background: #c0622a; }
+.card.sites .meta-dot { background: #4a7fa5; }
+
+.card-cta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding-top: 20px;
+  border-top: 1px solid #2e3540;
+}
+
+.card.fire  .card-cta { color: #c0622a; }
+.card.sites .card-cta { color: #4a7fa5; }
+
+.arrow {
+  transition: transform 0.15s;
+}
+
+.card:hover .arrow {
+  transform: translateX(4px);
+}
+
+.footer {
+  margin-top: 48px;
+  font-size: 0.68rem;
+  color: #3a4250;
+  text-align: center;
+  line-height: 1.7;
+}
+
+@media (max-width: 600px) {
+  .cards { flex-direction: column; }
+  .site-title { font-size: 1.35rem; }
+}
+</style>
 </head>
 <body>
 
-<!-- ── Instructions modal ──────────────────────────────────────────── -->
-<div id="modal-overlay">
-  <div class="modal-card" id="modal-composition">
-    <h2>Welcome to the Ecosystem Reference Site Review</h2>
-    <p class="modal-subtitle">Mozambique · AlphaEarth biomass model</p>
-
-    <div class="modal-steps">
-      <div class="modal-step">
-        <div class="step-num">1</div>
-        <div class="step-body">
-          <strong>Qualifying ecosystems</strong>
-          <p><b>Coloured</b> ecosystems have reference sites with significantly
-          higher biomass than the surrounding disturbed landscape — these are our
-          validated reference ecosystems. <b>Dark grey</b> ecosystems did not qualify.
-          Click any polygon to see details.</p>
-        </div>
-      </div>
-      <div class="modal-step">
-        <div class="step-num">2</div>
-        <div class="step-body">
-          <strong>Reference site patches</strong>
-          <p>Hatched areas within each qualifying ecosystem show the actual
-          reference site patches — the least-disturbed areas used to establish
-          biomass baselines.</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="modal-draw-tip">
-      <strong>✏️ How to leave feedback</strong>
-      Use the shape icons (square, line, or point) in the top-left corner of the
-      map to draw around any area you want to comment on. A form will appear for
-      you to describe what you're seeing.
-    </div>
-
-    <div class="modal-footer">
-      <button id="modal-close-btn">Got it — let me explore</button>
-    </div>
-  </div>
+<div class="header">
+  <div class="wcs-label">Wildlife Conservation Society · SBAPP · Mozambique</div>
+  <h1 class="site-title">Ecosystem Analysis Tools</h1>
+  <p class="site-sub">Spatial analysis of ecosystem condition and fire regimes<br>across Mozambique's 91 qualifying ecosystem types</p>
 </div>
 
-<!-- ── Drawing tools callout ───────────────────────────────────────── -->
-<div id="draw-callout" class="hidden">
-  <span class="callout-arrow">👆</span>
-  <span><b>Drawing tools</b> — use the shape icons (square, line, or point)
-  in the top-left corner of the map to mark an area and leave feedback.</span>
-  <span class="callout-close" id="callout-close">✕</span>
+<div class="cards">
+
+  <a class="card fire" href="reference_sites.html">
+    <div class="card-icon">🌿</div>
+    <div class="card-label">Reference Site Review</div>
+    <h2 class="card-title">Ecosystem Reference Sites</h2>
+    <p class="card-desc">Explore qualifying ecosystems and their reference site patches — the least-disturbed areas used to establish biomass baselines. Leave expert feedback on boundaries and site selection.</p>
+    <div class="card-meta">
+      <div class="meta-item"><div class="meta-dot"></div>91 qualifying ecosystem types</div>
+      <div class="meta-item"><div class="meta-dot"></div>AlphaEarth AGB 2022 · Distance to disturbance</div>
+      <div class="meta-item"><div class="meta-dot"></div>Expert review &amp; feedback tool</div>
+    </div>
+    <div class="card-cta">Open reference site review <span class="arrow">→</span></div>
+  </a>
+
+  <a class="card sites" href="fire_explorer.html">
+    <div class="card-icon">🔥</div>
+    <div class="card-label">Fire Severity Explorer</div>
+    <h2 class="card-title">Fire Frequency Analysis</h2>
+    <p class="card-desc">Explore GABAM Landsat fire count data across ecosystem types. Filter by ecosystem, adjust fire class thresholds, and view aboveground biomass by fire frequency class.</p>
+    <div class="card-meta">
+      <div class="meta-item"><div class="meta-dot"></div>GABAM fire count 2001–2021 · 500 m</div>
+      <div class="meta-item"><div class="meta-dot"></div>Biomass by fire class · AlphaEarth AGB 2022</div>
+      <div class="meta-item"><div class="meta-dot"></div>Adjustable fire class thresholds</div>
+    </div>
+    <div class="card-cta">Open fire explorer <span class="arrow">→</span></div>
+  </a>
+
 </div>
 
-<!-- ── Sidebar ─────────────────────────────────────────────────────── -->
-<div id="sidebar">
-  <a href="landing.html" style="display:inline-flex;align-items:center;gap:4px;margin-bottom:14px;font-size:0.78rem;font-weight:600;color:#555;text-decoration:none;padding:5px 10px;background:#eee;border-radius:5px;border:1px solid #ddd;">← Back to tools</a>
-  <h1>Ecosystem Reference Site Review</h1>
-  <p class="subtitle">Mozambique · Expert review map</p>
-
-  <!-- Instructions re-open button -->
-  <button class="instructions-btn" id="show-instructions-btn">
-    <span class="help-icon">?</span>
-    How does this work?
-  </button>
-
-  <!-- Hidden radio inputs kept for JS compatibility -->
-  <input type="radio" name="reviewMode" id="modeComposition" value="composition" style="display:none"/>
-  <input type="radio" name="reviewMode" id="modeReference" value="reference" checked style="display:none"/>
-
-  <div class="field">
-    <label for="expertName">Your name</label>
-    <input id="expertName" type="text" placeholder="e.g. Jane Smith" />
-  </div>
-
-  <h2>Focus on an ecosystem type</h2>
-  <div class="field">
-    <label for="subgroupSelect">Ecosystem type</label>
-    <select id="subgroupSelect">
-      <option value="">All ecosystem types</option>
-    </select>
-  </div>
-
-  <div id="referencePanel">
-    <h2>Layers</h2>
-    <div class="field checkbox">
-      <label><input type="checkbox" id="toggleSubgroups" checked /> Ecosystem boundaries</label>
-    </div>
-    <div class="field checkbox">
-      <label><input type="checkbox" id="toggleLabels" /> Ecosystem labels</label>
-    </div>
-    <div class="field checkbox">
-      <label><input type="checkbox" id="toggleReferenceSites" checked /> Reference site patches</label>
-    </div>
-    <div class="field checkbox">
-      <label><input type="checkbox" id="toggleDistanceRef" /> Distance to disturbance
-        <span style="font-size:0.78em; color:#666; display:block; margin-left:1.5em;">
-          <span style="background:linear-gradient(to right,#d73027,#fee08b,#1a9850); display:inline-block; width:80px; height:8px; vertical-align:middle; border-radius:3px;"></span>
-          0 km → 10+ km
-        </span>
-      </label>
-    </div>
-
-  </div>
-
-  <!-- Dummy elements for JS compatibility (composition panel references) -->
-  <input type="checkbox" id="toggleEcosystems" checked style="display:none"/>
-  <input type="checkbox" id="toggleEcoLabels" style="display:none"/>
-  <input type="checkbox" id="toggleDistance" style="display:none"/>
-
-  <div id="ecoInfoPanel" style="display:none;">
-    <h2 id="ecoInfoName"></h2>
-    <div id="ecoInfoContent"></div>
-  </div>
-
-  <h2>Your submitted feedback</h2>
-  <div id="feedbackList"><p class="muted">No feedback submitted yet this session.</p></div>
+<div class="footer">
+  Mozambique SBAPP · WCS · Data: GABAM, AlphaEarth, IUCN GET
 </div>
 
-<!-- ── Map ─────────────────────────────────────────────────────────── -->
-<div id="map">
-  <div id="legend-float">
-    <div id="legend-title">Broad Category</div>
-    <div id="legend"></div>
-  </div>
-</div>
-
-<!-- ── Feedback form panel ─────────────────────────────────────────── -->
-<div id="feedbackForm" class="hidden">
-  <h3>Leave feedback</h3>
-  <div class="field">
-    <label>Ecosystem type(s) this relates to</label>
-    <div id="formSubgroups" class="readonly"></div>
-  </div>
-  <div class="field">
-    <label for="formCategory">What kind of issue is this?</label>
-    <select id="formCategory">
-      <optgroup label="Qualifying ecosystems" id="categoryComposition">
-        <option value="Should qualify">This ecosystem should qualify but doesn't</option>
-        <option value="Should not qualify">This ecosystem should not qualify but does</option>
-        <option value="Boundary issue">The ecosystem boundary looks wrong here</option>
-      </optgroup>
-      <optgroup label="Reference sites" id="categoryReference">
-        <option value="Unexpected reference site">This reference site looks disturbed or atypical</option>
-        <option value="Missing reference site">This area should be a reference site but isn't</option>
-      </optgroup>
-      <option value="General comment">General comment</option>
-    </select>
-  </div>
-  <div class="field">
-    <label for="formComment">Describe what you're seeing</label>
-    <textarea id="formComment" rows="4" placeholder="What looks wrong, and why?"></textarea>
-  </div>
-  <div class="field buttons">
-    <button id="formSubmit">Submit feedback</button>
-    <button id="formCancel" class="secondary">Cancel</button>
-  </div>
-  <p id="formStatus"></p>
-</div>
-
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
-<script src="https://unpkg.com/leaflet.pattern@0.1.0/dist/leaflet.pattern.js"></script>
-<script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
-<script src="config.js"></script>
-<script src="app.js"></script>
-
-<script>
-// ── Modal logic ─────────────────────────────────────────────────────
-document.getElementById('modal-close-btn').addEventListener('click', () => {
-  document.getElementById('modal-overlay').classList.add('hidden');
-  // Show drawing tools callout after modal closes
-  document.getElementById('draw-callout').classList.remove('hidden');
-});
-
-document.getElementById('show-instructions-btn').addEventListener('click', () => {
-  document.getElementById('modal-overlay').classList.remove('hidden');
-});
-
-document.getElementById('callout-close').addEventListener('click', () => {
-  document.getElementById('draw-callout').classList.add('hidden');
-});
-
-</script>
 </body>
 </html>
