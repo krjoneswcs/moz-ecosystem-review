@@ -140,6 +140,44 @@ input[type=range]::-moz-range-thumb {
 .grad-bar { height: 12px; border-radius: 3px; margin-bottom: 4px; }
 .grad-labels { display: flex; justify-content: space-between; font-size: 0.65rem; color: #7a8495; }
 
+/* ── Feedback panel ────────────────────────────────────────────────── */
+#fireFeedbackPanel {
+  position: fixed; bottom: 0; right: 0; width: 360px;
+  background: #1e232c; border: 1px solid #2e3540; border-bottom: none;
+  border-radius: 10px 10px 0 0; padding: 20px 20px 24px;
+  z-index: 9500; box-shadow: 0 -4px 20px rgba(0,0,0,0.4);
+  display: none;
+}
+#fireFeedbackPanel h3 { font-size: 0.9rem; font-weight: 700; color: #f0ece4; margin-bottom: 14px; }
+#fireFeedbackPanel label { font-size: 0.75rem; color: #7a8495; display: block; margin-bottom: 4px; margin-top: 10px; }
+#fireFeedbackPanel input[type=text],
+#fireFeedbackPanel textarea,
+#fireFeedbackPanel select {
+  width: 100%; background: #242930; color: #e8e4dc;
+  border: 1px solid #3a4250; border-radius: 5px;
+  padding: 7px 10px; font-size: 0.82rem; font-family: inherit;
+  background-image: none;
+}
+#fireFeedbackPanel textarea { resize: vertical; min-height: 72px; }
+.fire-fb-buttons { display: flex; gap: 8px; margin-top: 14px; }
+.fire-fb-buttons button {
+  flex: 1; padding: 9px; border-radius: 6px; font-size: 0.82rem;
+  font-weight: 600; cursor: pointer; border: none;
+}
+#fireFbSubmit { background: #e8761a; color: #fff; }
+#fireFbSubmit:hover { background: #d06a14; }
+#fireFbCancel { background: #242930; color: #9aa3b0; border: 1px solid #3a4250; }
+#fireFbStatus { font-size: 0.75rem; margin-top: 8px; min-height: 18px; }
+#fireFeedbackMapBtn {
+  position: absolute; bottom: 60px; right: 12px; z-index: 800;
+  background: rgba(26,30,36,0.92); border: 1px solid #3a4250;
+  border-radius: 6px; padding: 8px 12px;
+  color: #c8c4bc; font-size: 0.78rem; font-weight: 600;
+  cursor: pointer; white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+#fireFeedbackMapBtn:hover { background: #2e3540; }
+
 /* ── Intro modal ───────────────────────────────────────────────────── */
 #modal-overlay {
   position: fixed; inset: 0; background: rgba(10,12,16,0.78);
@@ -308,6 +346,37 @@ input[type=range]::-moz-range-thumb {
     Fire count = number of times a pixel burned 2001–2021 (GABAM 30 m Landsat, resampled to 1 km for display). Histograms computed at 100 m. Thresholds define class boundaries; defaults match the RLE assessment analysis.
   </div>
 
+  <div>
+    <div class="section-label" style="margin-bottom:10px;">Feedback</div>
+    <button id="openFeedbackBtn" style="width:100%;padding:9px;border:1px solid #3a4250;border-radius:6px;background:#242930;color:#c8c4bc;font-size:0.82rem;cursor:pointer;text-align:left;">
+      ✉ Leave feedback on this ecosystem
+    </button>
+    <div id="fireFeedbackList" style="margin-top:10px;font-size:0.75rem;color:#5a6478;"></div>
+  </div>
+
+</div>
+
+<!-- ── Feedback panel ──────────────────────────────────────────────── -->
+<div id="fireFeedbackPanel">
+  <h3>Leave feedback</h3>
+  <label>Your name</label>
+  <input type="text" id="fireFbName" placeholder="e.g. Jane Smith" />
+  <label>Ecosystem</label>
+  <input type="text" id="fireFbEco" readonly style="color:#5a6478;" />
+  <label>Category</label>
+  <select id="fireFbCategory">
+    <option value="Threshold suggestion">Fire class thresholds look wrong for this ecosystem</option>
+    <option value="Biomass pattern query">Biomass pattern looks unexpected</option>
+    <option value="Should not qualify">This ecosystem should not qualify</option>
+    <option value="General comment">General comment</option>
+  </select>
+  <label>Comment</label>
+  <textarea id="fireFbComment" placeholder="Describe what you're seeing…"></textarea>
+  <div class="fire-fb-buttons">
+    <button id="fireFbSubmit">Submit</button>
+    <button id="fireFbCancel">Cancel</button>
+  </div>
+  <p id="fireFbStatus"></p>
 </div>
 
 <!-- ── Map ─────────────────────────────────────────────────────────── -->
@@ -322,6 +391,7 @@ input[type=range]::-moz-range-thumb {
     <div class="grad-bar" id="grad-bar"></div>
     <div class="grad-labels" id="grad-labels"></div>
   </div>
+  <button id="fireFeedbackMapBtn">✉ Leave feedback</button>
 </div>
 
 </div><!-- /layout -->
@@ -1036,6 +1106,63 @@ function updateAgbChart() {
 // ── Init ──────────────────────────────────────────────────────────────
 updateStats();
 updateGradientBar();
+
+// ── Feedback panel logic ───────────────────────────────────────────────
+const FIRE_FEEDBACK_URL = "https://script.google.com/macros/s/AKfycbxEEhaEMwAalBNbXbtj7f7YBZ9-hdoo5XRoOwJibF53EpGI09Xo-irZE5MA0XBZkYND/exec";
+
+function openFireFeedback() {
+  const eco = document.getElementById('ecoSelect').value || 'All ecosystems';
+  document.getElementById('fireFbEco').value = eco;
+  document.getElementById('fireFbStatus').textContent = '';
+  document.getElementById('fireFeedbackPanel').style.display = 'block';
+}
+
+document.getElementById('openFeedbackBtn').addEventListener('click', openFireFeedback);
+document.getElementById('fireFeedbackMapBtn').addEventListener('click', openFireFeedback);
+
+document.getElementById('fireFbCancel').addEventListener('click', () => {
+  document.getElementById('fireFeedbackPanel').style.display = 'none';
+});
+
+document.getElementById('fireFbSubmit').addEventListener('click', () => {
+  const name = document.getElementById('fireFbName').value.trim();
+  if (!name) {
+    document.getElementById('fireFbStatus').textContent = 'Please enter your name.';
+    document.getElementById('fireFbStatus').style.color = '#c0392b';
+    return;
+  }
+  const record = {
+    timestamp: new Date().toISOString(),
+    expert_name: name,
+    category: document.getElementById('fireFbCategory').value,
+    comment: document.getElementById('fireFbComment').value.trim(),
+    sub_groups: document.getElementById('fireFbEco').value,
+    geometry_type: 'none',
+    geometry_geojson: '',
+    map_url: window.location.href,
+  };
+  document.getElementById('fireFbStatus').textContent = 'Submitting…';
+  document.getElementById('fireFbStatus').style.color = '#7a8495';
+  fetch(FIRE_FEEDBACK_URL, {
+    method: 'POST', mode: 'no-cors',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(record),
+  }).then(() => {
+    document.getElementById('fireFbStatus').textContent = 'Submitted. Thank you!';
+    document.getElementById('fireFbStatus').style.color = '#2d6a4f';
+    // Add to sidebar list
+    const list = document.getElementById('fireFeedbackList');
+    const item = document.createElement('div');
+    item.style.cssText = 'border-top:1px solid #2e3540;padding-top:6px;margin-top:6px;';
+    item.innerHTML = `<strong style="color:#c8c4bc;">${record.category}</strong><br>${record.sub_groups}<br><span style="color:#3a4250">${record.comment}</span>`;
+    list.prepend(item);
+    document.getElementById('fireFbComment').value = '';
+    setTimeout(() => { document.getElementById('fireFeedbackPanel').style.display = 'none'; }, 1000);
+  }).catch(() => {
+    document.getElementById('fireFbStatus').textContent = 'Submission failed.';
+    document.getElementById('fireFbStatus').style.color = '#c0392b';
+  });
+});
 
 document.getElementById('fire-modal-close').addEventListener('click', () => {
   document.getElementById('modal-overlay').classList.add('hidden');
