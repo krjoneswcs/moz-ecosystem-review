@@ -163,8 +163,8 @@ function buildLegend() {
   note.className = 'legend-note';
   note.innerHTML = `
     <hr/>
-    <span class="flag-higher">&#9646; Colour</span> — validated reference ecosystem (biomass &gt;10% higher)<br/>
-    <span style="color:#4a4a4a">&#9646; Dark grey</span> — did not qualify<br/>
+    <span class="flag-higher">&#9646; Colour</span> — ecosystem with validated reference sites (flag=higher, ≥100 ref. pixels)<br/>
+    <span style="color:#4a4a4a">&#9646; Dark grey</span> — insufficient reference pixels<br/>
     <span class="muted">Click an ecosystem type for details.</span>
   `;
   legend.appendChild(note);
@@ -234,8 +234,8 @@ Promise.all([
       subgroupLayers[feature.properties.sub_group_label] = layer;
       const p = feature.properties;
       let flagHtml = '';
-      if (p.flag === 'lower') flagHtml = '<span class="flag-lower">⚠ Reference AGBD LOWER than non-reference</span>';
-      else if (p.flag === 'similar') flagHtml = '<span class="flag-similar">~ Reference AGBD similar to non-reference</span>';
+      if (p.flag === 'lower') flagHtml = '<span class="flag-lower">⚠ Reference AGBD lower than non-reference (note: corrected raster used)</span>';
+      else if (p.flag === 'similar') flagHtml = '<span class="flag-similar">~ Reference AGBD similar to non-reference (note: corrected raster used)</span>';
       else if (p.flag === 'higher') flagHtml = '<span class="flag-higher">Reference AGBD higher than non-reference (expected)</span>';
 
       layer.bindPopup(`
@@ -575,7 +575,23 @@ function fmt(v) {
   return v;
 }
 
+function conditionBadge(cat) {
+  const colours = { CR: '#d62728', EN: '#ff7f0e', VU: '#e8b800', LC: '#2ca02c' };
+  const c = colours[cat] || '#aaa';
+  return cat ? `<span style="background:${c};color:white;padding:1px 6px;border-radius:3px;font-weight:bold;font-size:0.85em;">${cat}</span>` : '';
+}
+
 function showEcoInfo(p, envRows, biomassRows, flagHtml) {
+  const hasCondition = p.cond_score_mean !== null && p.cond_score_mean !== undefined && !Number.isNaN(p.cond_score_mean);
+  const condRows = hasCondition
+    ? `<tr><td colspan="2" style="padding-top:8px;font-weight:600;color:#555;">Ecosystem condition (Sturbois 2023)</td></tr>
+       <tr><td>Condition score</td><td>${(+p.cond_score_mean).toFixed(2)} &nbsp;${conditionBadge(p.cat_D)} <span class="muted">(Criterion D)</span></td></tr>
+       <tr><td>&gt;30% degraded</td><td>${fmt(p.pct_sev30)}%</td></tr>
+       <tr><td>&gt;50% degraded</td><td>${fmt(p.pct_sev50)}%</td></tr>
+       <tr><td>&gt;80% degraded</td><td>${fmt(p.pct_sev80)}%</td></tr>
+       <tr><td>Ref. median AGBD</td><td>${fmt(p.ref_agb_median)} Mg/ha</td></tr>`
+    : `<tr><td colspan="2" style="padding-top:8px;" class="muted">No condition score (insufficient reference pixels)</td></tr>`;
+
   document.getElementById('ecoInfoName').textContent = p.EnglishNam;
   document.getElementById('ecoInfoContent').innerHTML = `
     <p class="muted" style="margin-bottom:8px;">Ecosystem group: ${p.group_label}</p>
@@ -584,6 +600,7 @@ function showEcoInfo(p, envRows, biomassRows, flagHtml) {
       ${envRows}
       <tr><td>Reference area</td><td>${fmt(p.ref_area_km2)} km² (${fmt(p.pct_ref)}%)</td></tr>
       ${biomassRows}
+      ${condRows}
     </table>
     <div style="margin-top:10px;">${flagHtml}</div>
   `;
