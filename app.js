@@ -163,7 +163,7 @@ function buildLegend() {
   note.className = 'legend-note';
   note.innerHTML = `
     <hr/>
-    <span class="flag-higher">&#9646; Colour</span> — ecosystem with validated reference sites (flag=higher, ≥100 ref. pixels)<br/>
+    <span class="flag-higher">&#9646; Colour</span> — ecosystem with validated reference sites (flag=higher, ≥50 ref. pixels)<br/>
     <span style="color:#4a4a4a">&#9646; Dark grey</span> — insufficient reference pixels<br/>
     <span class="muted">Click an ecosystem type for details.</span>
   `;
