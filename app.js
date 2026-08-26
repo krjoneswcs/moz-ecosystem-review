@@ -62,6 +62,32 @@ function syncDistanceToggle(checked) {
 document.getElementById('toggleDistance').addEventListener('change', e => syncDistanceToggle(e.target.checked));
 document.getElementById('toggleDistanceRef').addEventListener('change', e => syncDistanceToggle(e.target.checked));
 
+// ── Provincial boundaries ─────────────────────────────────────────────
+let provincesLayer = null;
+fetch('data/moz_provinces.geojson').then(r => r.json()).then(geojson => {
+  provincesLayer = L.geoJSON(geojson, {
+    style: {
+      color: '#ffffff',
+      weight: 1.8,
+      opacity: 0.7,
+      fillOpacity: 0,
+      dashArray: '5 4',
+    },
+    onEachFeature: (feature, layer) => {
+      layer.bindTooltip(feature.properties.name, {
+        permanent: false, direction: 'center',
+        className: 'province-tooltip'
+      });
+    }
+  });
+});
+
+document.getElementById('toggleProvinces').addEventListener('change', e => {
+  if (!provincesLayer) return;
+  if (e.target.checked) provincesLayer.addTo(map);
+  else map.removeLayer(provincesLayer);
+});
+
 // ---------------------------------------------------------------------
 // Reference site polygons (vectorized from the 25m raster, reprojected
 // with pyproj so they align exactly with the ecosystem-type boundaries and
@@ -389,6 +415,15 @@ fetch('data/ecosystems.geojson')
           `
           : '';
 
+        layer.on('mouseover', function() {
+          this.setStyle({ weight: 2.5, color: '#ffffff', fillOpacity: Math.min((this.options.fillOpacity || 0) + 0.15, 1) });
+          this.bringToFront();
+          this.bindTooltip(p.EnglishNam, { sticky: true, className: 'eco-hover-tip' }).openTooltip();
+        });
+        layer.on('mouseout', function() {
+          ecosystemLayer.resetStyle(this);
+          this.closeTooltip();
+        });
         layer.on('click', () => {
           showEcoInfo(p, envRows, biomassRows, flagHtml);
           // Sync dropdown

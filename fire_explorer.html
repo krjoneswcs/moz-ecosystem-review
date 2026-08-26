@@ -178,6 +178,13 @@ input[type=range]::-moz-range-thumb {
 }
 #fireFeedbackMapBtn:hover { background: #2e3540; }
 
+/* ── Province tooltip ──────────────────────────────────────────────── */
+.province-label {
+  background: rgba(20,24,30,0.82); border: none; border-radius: 3px;
+  color: #ccc; font-size: 11px; padding: 3px 7px; pointer-events: none;
+}
+.province-label::before { display: none; }
+
 /* ── Intro modal ───────────────────────────────────────────────────── */
 #modal-overlay {
   position: fixed; inset: 0; background: rgba(10,12,16,0.78);
@@ -279,10 +286,14 @@ input[type=range]::-moz-range-thumb {
   </div>
 
   <div>
-    <div class="section-label" style="margin-bottom:10px;">Fire layer</div>
+    <div class="section-label" style="margin-bottom:10px;">Layers</div>
     <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.82rem;color:#c8c4bc;">
       <input type="checkbox" id="toggleFire" checked style="width:auto;accent-color:#6b9fd4;" />
-      Show fire frequency layer
+      Fire frequency layer
+    </label>
+    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.82rem;color:#c8c4bc;margin-top:8px;">
+      <input type="checkbox" id="toggleProvincesF" style="width:auto;accent-color:#6b9fd4;" />
+      Provincial boundaries
     </label>
   </div>
 
@@ -850,6 +861,32 @@ sliders.forEach((id, i) => {
 function refreshLayer() {
   renderOverlay();
 }
+
+// ── Provincial boundaries ─────────────────────────────────────────────
+let fireProvincesLayer = null;
+fetch('data/moz_provinces.geojson').then(r => r.json()).then(geojson => {
+  fireProvincesLayer = L.geoJSON(geojson, {
+    style: {
+      color: '#ffffff',
+      weight: 1.8,
+      opacity: 0.6,
+      fillOpacity: 0,
+      dashArray: '5 4',
+    },
+    onEachFeature: (feature, layer) => {
+      layer.bindTooltip(feature.properties.name, {
+        permanent: false, direction: 'center',
+        className: 'province-label'
+      });
+    }
+  });
+});
+
+document.getElementById('toggleProvincesF').addEventListener('change', e => {
+  if (!fireProvincesLayer) return;
+  if (e.target.checked) fireProvincesLayer.addTo(map);
+  else map.removeLayer(fireProvincesLayer);
+});
 
 // ── Fire layer toggle ─────────────────────────────────────────────────
 document.getElementById('toggleFire').addEventListener('change', e => {

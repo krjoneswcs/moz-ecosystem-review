@@ -433,3 +433,27 @@ button:hover { filter: brightness(1.1); }
   color: #555;
   margin-bottom: 8px;
 }
+
+.eco-hover-tip {
+  background: rgba(255,255,255,0.95);
+  border: 1px solid #aaa;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #222;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.eco-hover-tip::before { display: none; }
+
+.province-tooltip {
+  background: rgba(30,30,30,0.8);
+  border: none;
+  border-radius: 3px;
+  color: #eee;
+  font-size: 11px;
+  padding: 3px 7px;
+  pointer-events: none;
+}
+.province-tooltip::before { display: none; }
