@@ -178,6 +178,14 @@ input[type=range]::-moz-range-thumb {
 }
 #fireFeedbackMapBtn:hover { background: #2e3540; }
 
+/* ── Hover tooltips ────────────────────────────────────────────────── */
+.eco-hover-tip {
+  background: rgba(255,255,255,0.95); border: 1px solid #aaa;
+  border-radius: 4px; padding: 4px 8px; font-size: 12px;
+  font-weight: 600; color: #222; white-space: nowrap; pointer-events: none;
+}
+.eco-hover-tip::before { display: none; }
+
 /* ── Province tooltip ──────────────────────────────────────────────── */
 .province-label {
   background: rgba(20,24,30,0.82); border: none; border-radius: 3px;
@@ -861,6 +869,36 @@ sliders.forEach((id, i) => {
 function refreshLayer() {
   renderOverlay();
 }
+
+// ── Invisible ecosystem polygons for hover interaction ────────────────
+let ecoHoverLayer = null;
+fetch('data/ecosystems.geojson').then(r => r.json()).then(geojson => {
+  ecoHoverLayer = L.geoJSON(geojson, {
+    style: {
+      color: 'transparent',
+      weight: 0,
+      fillOpacity: 0,
+    },
+    onEachFeature: (feature, layer) => {
+      const name = feature.properties.EnglishNam;
+      layer.on('mouseover', function() {
+        this.setStyle({ color: '#ffffff', weight: 2, fillColor: '#ffffff', fillOpacity: 0.08 });
+        this.bindTooltip(name, { sticky: true, className: 'eco-hover-tip' }).openTooltip();
+      });
+      layer.on('mouseout', function() {
+        ecoHoverLayer.resetStyle(this);
+        this.closeTooltip();
+      });
+      layer.on('click', () => {
+        const sel = document.getElementById('ecoSelect');
+        if (sel.value !== name) {
+          sel.value = name;
+          sel.dispatchEvent(new Event('change'));
+        }
+      });
+    }
+  }).addTo(map);
+});
 
 // ── Provincial boundaries ─────────────────────────────────────────────
 let fireProvincesLayer = null;
