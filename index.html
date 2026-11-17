@@ -19,6 +19,25 @@ body {
   padding: 40px 24px;
 }
 
+.topbar {
+  position: fixed;
+  top: 16px;
+  right: 20px;
+}
+
+.lang-toggle-btn {
+  background: none;
+  border: 1px solid #3a4250;
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #7a8495;
+  cursor: pointer;
+  letter-spacing: 0.05em;
+}
+.lang-toggle-btn:hover { background: #1a1e24; color: #c8c4bc; }
+
 .header {
   text-align: center;
   margin-bottom: 52px;
@@ -178,45 +197,63 @@ body {
 </head>
 <body>
 
+<div class="topbar">
+  <button class="lang-toggle-btn" id="landingLangBtn">PT</button>
+</div>
+
 <div class="header">
-  <div class="wcs-label">Wildlife Conservation Society · SBAPP · Mozambique</div>
-  <h1 class="site-title">Ecosystem Analysis Tools</h1>
-  <p class="site-sub">Spatial analysis of ecosystem condition and fire regimes<br>across Mozambique's 69 qualifying ecosystem types</p>
+  <div class="wcs-label" data-i18n="landing_wcs_label">Wildlife Conservation Society · SBAPP · Mozambique</div>
+  <h1 class="site-title" data-i18n="landing_title">Ecosystem Analysis Tools</h1>
+  <p class="site-sub" data-i18n="landing_sub">Spatial analysis of ecosystem condition and fire regimes<br>across Mozambique's qualifying ecosystem types</p>
 </div>
 
 <div class="cards">
 
-  <a class="card fire" href="reference_sites.html">
+  <a class="card sites" href="reference_sites.html">
     <div class="card-icon">🌿</div>
-    <div class="card-label">Reference Site Review</div>
-    <h2 class="card-title">Ecosystem Reference Sites</h2>
-    <p class="card-desc">Explore qualifying ecosystems and their reference site patches — the least-disturbed areas used to establish biomass baselines. Leave expert feedback on boundaries and site selection.</p>
+    <div class="card-label" data-i18n="landing_ref_label">Reference Site Review</div>
+    <h2 class="card-title" data-i18n="landing_ref_title">Ecosystem Reference Sites</h2>
+    <p class="card-desc" data-i18n="landing_ref_desc">Explore qualifying ecosystems and their reference site patches — the least-disturbed areas used to establish biomass baselines. Leave expert feedback on boundaries and site selection.</p>
     <div class="card-meta">
-      <div class="meta-item"><div class="meta-dot"></div>69 qualifying ecosystem types</div>
-      <div class="meta-item"><div class="meta-dot"></div>AlphaEarth AGB 2022 · Distance to disturbance</div>
-      <div class="meta-item"><div class="meta-dot"></div>Expert review &amp; feedback tool</div>
+      <div class="meta-item"><div class="meta-dot"></div><span data-i18n="landing_ref_meta1">69 qualifying ecosystem types</span></div>
+      <div class="meta-item"><div class="meta-dot"></div><span data-i18n="landing_ref_meta2">AlphaEarth AGB 2022 · Distance to disturbance</span></div>
+      <div class="meta-item"><div class="meta-dot"></div><span data-i18n="landing_ref_meta3">Expert review &amp; feedback tool</span></div>
     </div>
-    <div class="card-cta">Open reference site review <span class="arrow">→</span></div>
+    <div class="card-cta"><span data-i18n="landing_ref_cta">Open reference site review</span> <span class="arrow">→</span></div>
   </a>
 
-  <a class="card sites" href="fire_explorer.html">
+  <a class="card fire" href="fire_explorer.html">
     <div class="card-icon">🔥</div>
-    <div class="card-label">Fire Severity Explorer</div>
-    <h2 class="card-title">Fire Frequency Analysis</h2>
-    <p class="card-desc">Explore GABAM Landsat fire count data across ecosystem types. Filter by ecosystem, adjust fire class thresholds, and view aboveground biomass by fire frequency class.</p>
+    <div class="card-label" data-i18n="landing_fire_label">Fire Severity Explorer</div>
+    <h2 class="card-title" data-i18n="landing_fire_title">Fire Frequency Analysis</h2>
+    <p class="card-desc" data-i18n="landing_fire_desc">Explore GABAM Landsat fire count data across ecosystem types. Filter by ecosystem, adjust fire class thresholds, and view aboveground biomass by fire frequency class.</p>
     <div class="card-meta">
-      <div class="meta-item"><div class="meta-dot"></div>GABAM fire count 2001–2021 · 500 m</div>
-      <div class="meta-item"><div class="meta-dot"></div>Biomass by fire class · AlphaEarth AGB 2022</div>
-      <div class="meta-item"><div class="meta-dot"></div>Adjustable fire class thresholds</div>
+      <div class="meta-item"><div class="meta-dot"></div><span data-i18n="landing_fire_meta1">GABAM fire count 2001–2021 · 500 m</span></div>
+      <div class="meta-item"><div class="meta-dot"></div><span data-i18n="landing_fire_meta2">Biomass by fire class · AlphaEarth AGB 2022</span></div>
+      <div class="meta-item"><div class="meta-dot"></div><span data-i18n="landing_fire_meta3">Adjustable fire class thresholds</span></div>
     </div>
-    <div class="card-cta">Open fire explorer <span class="arrow">→</span></div>
+    <div class="card-cta"><span data-i18n="landing_fire_cta">Open fire explorer</span> <span class="arrow">→</span></div>
   </a>
 
 </div>
 
-<div class="footer">
+<div class="footer" data-i18n="landing_footer">
   Mozambique SBAPP · WCS · Data: GABAM, AlphaEarth, IUCN GET
 </div>
 
+<script src="lang.js"></script>
+<script>
+  // Apply saved language on load
+  if (window.CURRENT_LANG !== 'en') setLang(window.CURRENT_LANG);
+
+  document.getElementById('landingLangBtn').addEventListener('click', () => {
+    setLang(window.CURRENT_LANG === 'en' ? 'pt' : 'en');
+    // Keep button label in sync (setLang handles data-i18n but this btn has no attribute)
+    document.getElementById('landingLangBtn').textContent = T('lang_toggle');
+  });
+
+  // Set initial button label
+  document.getElementById('landingLangBtn').textContent = T('lang_toggle');
+</script>
 </body>
 </html>

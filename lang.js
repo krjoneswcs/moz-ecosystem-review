@@ -3,7 +3,10 @@
 // setLang('pt') / setLang('en') switches language and re-renders all
 // [data-i18n] elements plus any registered dynamic callbacks.
 
-window.CURRENT_LANG = 'en';
+// Load saved language preference, default to 'en'
+window.CURRENT_LANG = (function() {
+  try { return localStorage.getItem('moz_lang') || 'en'; } catch(e) { return 'en'; }
+})();
 
 const TRANSLATIONS = {
   en: {
@@ -104,6 +107,26 @@ const TRANSLATIONS = {
 
     // ── Fire map gradient label ───────────────────────────────────
     'fire_classes_label':   'Fire frequency classes',
+
+    // ── Landing page ──────────────────────────────────────────────
+    'landing_wcs_label':    'Wildlife Conservation Society · SBAPP · Mozambique',
+    'landing_title':        'Ecosystem Analysis Tools',
+    'landing_sub':          "Spatial analysis of ecosystem condition and fire regimes across Mozambique's qualifying ecosystem types",
+    'landing_ref_label':    'Reference Site Review',
+    'landing_ref_title':    'Ecosystem Reference Sites',
+    'landing_ref_desc':     'Explore qualifying ecosystems and their reference site patches — the least-disturbed areas used to establish biomass baselines. Leave expert feedback on boundaries and site selection.',
+    'landing_ref_meta1':    '69 qualifying ecosystem types',
+    'landing_ref_meta2':    'AlphaEarth AGB 2022 · Distance to disturbance',
+    'landing_ref_meta3':    'Expert review & feedback tool',
+    'landing_ref_cta':      'Open reference site review',
+    'landing_fire_label':   'Fire Severity Explorer',
+    'landing_fire_title':   'Fire Frequency Analysis',
+    'landing_fire_desc':    'Explore GABAM Landsat fire count data across ecosystem types. Filter by ecosystem, adjust fire class thresholds, and view aboveground biomass by fire frequency class.',
+    'landing_fire_meta1':   'GABAM fire count 2001–2021 · 500 m',
+    'landing_fire_meta2':   'Biomass by fire class · AlphaEarth AGB 2022',
+    'landing_fire_meta3':   'Adjustable fire class thresholds',
+    'landing_fire_cta':     'Open fire explorer',
+    'landing_footer':       'Mozambique SBAPP · WCS · Data: GABAM, AlphaEarth, IUCN GET',
   },
 
   pt: {
@@ -204,6 +227,26 @@ const TRANSLATIONS = {
 
     // ── Fire map gradient label ───────────────────────────────────
     'fire_classes_label':   'Classes de frequência de incêndios',
+
+    // ── Landing page ──────────────────────────────────────────────
+    'landing_wcs_label':    'Wildlife Conservation Society · SBAPP · Moçambique',
+    'landing_title':        'Ferramentas de Análise de Ecossistemas',
+    'landing_sub':          'Análise espacial das condições dos ecossistemas e dos regimes de incêndio nos tipos de ecossistemas qualificados de Moçambique',
+    'landing_ref_label':    'Revisão de Sítios de Referência',
+    'landing_ref_title':    'Sítios de Referência de Ecossistemas',
+    'landing_ref_desc':     'Explore os ecossistemas qualificados e as suas parcelas de sítios de referência — as áreas menos perturbadas utilizadas para estabelecer as linhas de base de biomassa. Deixe comentários especializados sobre os limites e a seleção de sítios.',
+    'landing_ref_meta1':    '69 tipos de ecossistemas qualificados',
+    'landing_ref_meta2':    'AGB AlphaEarth 2022 · Distância à perturbação',
+    'landing_ref_meta3':    'Ferramenta de revisão especializada e comentários',
+    'landing_ref_cta':      'Abrir revisão de sítios de referência',
+    'landing_fire_label':   'Explorador de Severidade de Incêndios',
+    'landing_fire_title':   'Análise de Frequência de Incêndios',
+    'landing_fire_desc':    'Explore dados de contagem de incêndios GABAM Landsat por tipo de ecossistema. Filtre por ecossistema, ajuste os limiares das classes de incêndio e visualize a biomassa aérea por classe de frequência de incêndios.',
+    'landing_fire_meta1':   'Contagem de incêndios GABAM 2001–2021 · 500 m',
+    'landing_fire_meta2':   'Biomassa por classe de incêndio · AGB AlphaEarth 2022',
+    'landing_fire_meta3':   'Limiares de classes de incêndio ajustáveis',
+    'landing_fire_cta':     'Abrir explorador de incêndios',
+    'landing_footer':       'SBAPP Moçambique · WCS · Dados: GABAM, AlphaEarth, IUCN GET',
   }
 };
 
@@ -221,6 +264,7 @@ function onLangChange(cb) {
 function setLang(code) {
   window.CURRENT_LANG = code;
   document.documentElement.lang = code;
+  try { localStorage.setItem('moz_lang', code); } catch(e) {}
 
   // Update all static data-i18n elements
   document.querySelectorAll('[data-i18n]').forEach(el => {
