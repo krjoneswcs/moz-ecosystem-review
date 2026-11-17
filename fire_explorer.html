@@ -26,6 +26,15 @@ html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Sego
 .nav-link   { display: inline-block; margin-top: 6px; font-size: 0.72rem; color: #6b9fd4; text-decoration: none; }
 .nav-link:hover { text-decoration: underline; }
 
+/* ── Language toggle ───────────────────────────────────────────────── */
+.fire-lang-btn {
+  background: none; border: 1px solid #3a4250; border-radius: 4px;
+  padding: 3px 9px; font-size: 11px; font-weight: 700; color: #7a8495;
+  cursor: pointer; letter-spacing: 0.05em; flex-shrink: 0;
+}
+.fire-lang-btn:hover { background: #2e3540; color: #c8c4bc; }
+.header-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+
 /* ── Section labels ────────────────────────────────────────────────── */
 .section-label {
   font-size: 0.68rem; font-weight: 700; letter-spacing: 0.09em;
@@ -33,7 +42,6 @@ html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Sego
   padding-bottom: 5px;
 }
 
-/* ── Ecosystem mode toggle (pill) ──────────────────────────────────── */
 /* ── Ecosystem select ──────────────────────────────────────────────── */
 select, input[type=range] { width: 100%; }
 select {
@@ -186,12 +194,17 @@ input[type=range]::-moz-range-thumb {
 }
 .eco-hover-tip::before { display: none; }
 
-/* ── Province tooltip ──────────────────────────────────────────────── */
+/* ── Province / district tooltips ──────────────────────────────────── */
 .province-label {
   background: rgba(20,24,30,0.82); border: none; border-radius: 3px;
   color: #ccc; font-size: 11px; padding: 3px 7px; pointer-events: none;
 }
 .province-label::before { display: none; }
+.district-label {
+  background: rgba(20,24,30,0.72); border: none; border-radius: 3px;
+  color: #aaa; font-size: 10px; padding: 2px 6px; pointer-events: none;
+}
+.district-label::before { display: none; }
 
 /* ── Intro modal ───────────────────────────────────────────────────── */
 #modal-overlay {
@@ -245,31 +258,31 @@ input[type=range]::-moz-range-thumb {
 <!-- ── Intro modal ──────────────────────────────────────────────────── -->
 <div id="modal-overlay">
   <div class="modal-card">
-    <h2>Mozambique Fire Severity Explorer</h2>
-    <p class="modal-subtitle">GABAM Landsat fire count 2001–2021 · 88 ecosystem types · AlphaEarth AGB 2022</p>
+    <h2 data-i18n="fire_modal_title">Mozambique Fire Severity Explorer</h2>
+    <p class="modal-subtitle" data-i18n="fire_modal_sub">GABAM Landsat fire count 2001–2021 · 88 ecosystem types · AlphaEarth AGB 2022</p>
 
     <div class="modal-steps">
       <div class="modal-step">
         <div class="step-num">1</div>
         <div class="step-body">
-          <strong>Biomass–fire test</strong><br>
-          Each ecosystem shown here has a statistically significant difference in aboveground biomass between unburned and frequently-burned areas — confirming that fire frequency meaningfully predicts biomass condition within that ecosystem type.
+          <strong data-i18n="fire_step1_title">Biomass–fire test</strong><br>
+          <span data-i18n="fire_step1_body">Each ecosystem shown here has a statistically significant difference in aboveground biomass between unburned and frequently-burned areas — confirming that fire frequency meaningfully predicts biomass condition within that ecosystem type.</span>
         </div>
       </div>
       <div class="modal-step">
         <div class="step-num">2</div>
         <div class="step-body">
-          <strong>Climate similarity test</strong><br>
-          Areas with different fire frequencies are climatically similar within each ecosystem — ensuring that observed biomass differences across fire classes reflect fire regime, not underlying climate gradients.
+          <strong data-i18n="fire_step2_title">Climate similarity test</strong><br>
+          <span data-i18n="fire_step2_body">Areas with different fire frequencies are climatically similar within each ecosystem — ensuring that observed biomass differences across fire classes reflect fire regime, not underlying climate gradients.</span>
         </div>
       </div>
     </div>
 
     <div class="modal-note">
-      <strong>What this means:</strong> Only ecosystem types passing both tests are included. For these, fire frequency can serve as a credible proxy for ecosystem condition.
+      <span data-i18n="fire_modal_note" data-i18n-html><strong>What this means:</strong> Only ecosystem types passing both tests are included. For these, fire frequency can serve as a credible proxy for ecosystem condition.</span>
     </div>
 
-    <button class="modal-close-btn" id="fire-modal-close">Explore the data →</button>
+    <button class="modal-close-btn" id="fire-modal-close" data-i18n="fire_modal_btn">Explore the data →</button>
   </div>
 </div>
 
@@ -279,39 +292,48 @@ input[type=range]::-moz-range-thumb {
 <div id="sidebar">
 
   <div>
-    <div class="site-title">Mozambique Fire Severity Explorer</div>
-    <div class="site-sub">GABAM Landsat fire count 2001–2021 · 500 m</div>
-    <a class="nav-link" href="index.html">← Back to tools</a>
+    <div class="header-row">
+      <div>
+        <div class="site-title" data-i18n="fire_title">Mozambique Fire Severity Explorer</div>
+        <div class="site-sub" data-i18n="fire_subtitle">GABAM Landsat fire count 2001–2021 · 500 m</div>
+        <a class="nav-link" href="index.html" data-i18n="back_to_tools">← Back to tools</a>
+      </div>
+      <button class="fire-lang-btn lang-toggle-btn" id="fireLangBtn">PT</button>
+    </div>
   </div>
 
   <div>
-    <div class="section-label">Ecosystem</div>
+    <div class="section-label" data-i18n="ecosystem_label">Ecosystem</div>
     <div style="margin-top:8px;">
       <select id="ecoSelect">
-        <option value="">All ecosystems</option>
+        <option value="" data-i18n="all_ecosystems">All ecosystems</option>
       </select>
     </div>
   </div>
 
   <div>
-    <div class="section-label" style="margin-bottom:10px;">Layers</div>
+    <div class="section-label" style="margin-bottom:10px;" data-i18n="layers">Layers</div>
     <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.82rem;color:#c8c4bc;">
       <input type="checkbox" id="toggleFire" checked style="width:auto;accent-color:#6b9fd4;" />
-      Fire frequency layer
+      <span data-i18n="fire_layer">Fire frequency layer</span>
     </label>
     <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.82rem;color:#c8c4bc;margin-top:8px;">
       <input type="checkbox" id="toggleProvincesF" style="width:auto;accent-color:#6b9fd4;" />
-      Provincial boundaries
+      <span data-i18n="provincial_boundaries">Provincial boundaries</span>
+    </label>
+    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.82rem;color:#c8c4bc;margin-top:8px;">
+      <input type="checkbox" id="toggleDistrictsF" style="width:auto;accent-color:#6b9fd4;" />
+      <span data-i18n="district_boundaries">District boundaries</span>
     </label>
   </div>
 
   <div>
-    <div class="section-label" style="margin-bottom:10px;">Fire class thresholds</div>
+    <div class="section-label" style="margin-bottom:10px;" data-i18n="fire_thresholds">Fire class thresholds</div>
     <div class="thresholds">
 
       <div class="slider-row">
         <div class="slider-header">
-          <span class="slider-label">Unburned/Low  →  Moderate</span>
+          <span class="slider-label" data-i18n="thresh_label_1">Unburned/Low  →  Moderate</span>
           <span class="slider-val" id="val-t1">4</span>
         </div>
         <input type="range" id="t1" min="1" max="10" value="4" step="1" />
@@ -319,7 +341,7 @@ input[type=range]::-moz-range-thumb {
 
       <div class="slider-row">
         <div class="slider-header">
-          <span class="slider-label">Moderate  →  High</span>
+          <span class="slider-label" data-i18n="thresh_label_2">Moderate  →  High</span>
           <span class="slider-val" id="val-t2">8</span>
         </div>
         <input type="range" id="t2" min="2" max="14" value="8" step="1" />
@@ -327,7 +349,7 @@ input[type=range]::-moz-range-thumb {
 
       <div class="slider-row">
         <div class="slider-header">
-          <span class="slider-label">High  →  Very High</span>
+          <span class="slider-label" data-i18n="thresh_label_3">High  →  Very High</span>
           <span class="slider-val" id="val-t3">12</span>
         </div>
         <input type="range" id="t3" min="3" max="18" value="12" step="1" />
@@ -335,7 +357,7 @@ input[type=range]::-moz-range-thumb {
 
       <div class="slider-row">
         <div class="slider-header">
-          <span class="slider-label">Very High  →  Extreme</span>
+          <span class="slider-label" data-i18n="thresh_label_4">Very High  →  Extreme</span>
           <span class="slider-val" id="val-t4">17</span>
         </div>
         <input type="range" id="t4" min="4" max="21" value="17" step="1" />
@@ -345,29 +367,29 @@ input[type=range]::-moz-range-thumb {
   </div>
 
   <div>
-    <div class="section-label" style="margin-bottom:10px;">Class breakdown</div>
+    <div class="section-label" style="margin-bottom:10px;" data-i18n="class_breakdown">Class breakdown</div>
     <div class="class-legend" id="classLegend">
       <!-- populated by JS -->
     </div>
   </div>
 
-  <div class="stats-summary" id="statsSummary">
+  <div class="stats-summary" id="statsSummary" data-i18n="select_eco_stats">
     Select an ecosystem to see area statistics.
   </div>
 
   <div id="agbSection">
-    <div class="section-label" style="margin-bottom:8px;">Biomass by fire class</div>
+    <div class="section-label" style="margin-bottom:8px;" data-i18n="agb_section">Biomass by fire class</div>
     <canvas id="agbChart"></canvas>
-    <div class="agb-note">Median AGB (Mg/ha) · error bars = IQR · AlphaEarth 2022</div>
+    <div class="agb-note" data-i18n="agb_note">Median AGB (Mg/ha) · error bars = IQR · AlphaEarth 2022</div>
   </div>
 
-  <div style="margin-top:auto; padding-top:8px; font-size:0.68rem; color:#3a4250; line-height:1.6;">
+  <div style="margin-top:auto; padding-top:8px; font-size:0.68rem; color:#3a4250; line-height:1.6;" data-i18n="fire_data_note">
     Fire count = number of times a pixel burned 2001–2021 (GABAM 30 m Landsat, resampled to 1 km for display). Histograms computed at 100 m. Thresholds define class boundaries; defaults match the RLE assessment analysis.
   </div>
 
   <div>
-    <div class="section-label" style="margin-bottom:10px;">Feedback</div>
-    <button id="openFeedbackBtn" style="width:100%;padding:9px;border:1px solid #3a4250;border-radius:6px;background:#242930;color:#c8c4bc;font-size:0.82rem;cursor:pointer;text-align:left;">
+    <div class="section-label" style="margin-bottom:10px;" data-i18n="feedback_section">Feedback</div>
+    <button id="openFeedbackBtn" style="width:100%;padding:9px;border:1px solid #3a4250;border-radius:6px;background:#242930;color:#c8c4bc;font-size:0.82rem;cursor:pointer;text-align:left;" data-i18n="feedback_btn">
       ✉ Leave feedback on this ecosystem
     </button>
     <div id="fireFeedbackList" style="margin-top:10px;font-size:0.75rem;color:#5a6478;"></div>
@@ -377,23 +399,23 @@ input[type=range]::-moz-range-thumb {
 
 <!-- ── Feedback panel ──────────────────────────────────────────────── -->
 <div id="fireFeedbackPanel">
-  <h3>Leave feedback</h3>
-  <label>Your name</label>
-  <input type="text" id="fireFbName" placeholder="e.g. Jane Smith" />
-  <label>Ecosystem</label>
+  <h3 data-i18n="fire_fb_title">Leave feedback</h3>
+  <label data-i18n="fire_fb_name">Your name</label>
+  <input type="text" id="fireFbName" data-i18n="your_name_placeholder" placeholder="e.g. Jane Smith" />
+  <label data-i18n="fire_fb_eco">Ecosystem</label>
   <input type="text" id="fireFbEco" readonly style="color:#5a6478;" />
-  <label>Category</label>
+  <label data-i18n="fire_fb_category">Category</label>
   <select id="fireFbCategory">
-    <option value="Threshold suggestion">Fire class thresholds look wrong for this ecosystem</option>
-    <option value="Biomass pattern query">Biomass pattern looks unexpected</option>
-    <option value="Should not qualify">This ecosystem should not qualify</option>
-    <option value="General comment">General comment</option>
+    <option value="Threshold suggestion" data-i18n="fire_fb_cat1">Fire class thresholds look wrong for this ecosystem</option>
+    <option value="Biomass pattern query" data-i18n="fire_fb_cat2">Biomass pattern looks unexpected</option>
+    <option value="Should not qualify" data-i18n="fire_fb_cat3">This ecosystem should not qualify</option>
+    <option value="General comment" data-i18n="general_comment">General comment</option>
   </select>
-  <label>Comment</label>
-  <textarea id="fireFbComment" placeholder="Describe what you're seeing…"></textarea>
+  <label data-i18n="fire_fb_comment">Comment</label>
+  <textarea id="fireFbComment" data-i18n="describe_placeholder" placeholder="Describe what you're seeing…"></textarea>
   <div class="fire-fb-buttons">
-    <button id="fireFbSubmit">Submit</button>
-    <button id="fireFbCancel">Cancel</button>
+    <button id="fireFbSubmit" data-i18n="submit">Submit</button>
+    <button id="fireFbCancel" data-i18n="cancel">Cancel</button>
   </div>
   <p id="fireFbStatus"></p>
 </div>
@@ -406,17 +428,18 @@ input[type=range]::-moz-range-thumb {
   </div>
 
   <div id="class-gradient">
-    <h4>Fire frequency classes</h4>
+    <h4 data-i18n="fire_classes_label">Fire frequency classes</h4>
     <div class="grad-bar" id="grad-bar"></div>
     <div class="grad-labels" id="grad-labels"></div>
   </div>
-  <button id="fireFeedbackMapBtn">✉ Leave feedback</button>
+  <button id="fireFeedbackMapBtn" data-i18n="map_feedback_btn">✉ Leave feedback</button>
 </div>
 
 </div><!-- /layout -->
 
 <!-- Scripts -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="lang.js"></script>
 
 <script>
 // ── Class definitions ─────────────────────────────────────────────────
@@ -437,8 +460,6 @@ const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
 
 L.control.layers({'Satellite': esriSat, 'OpenStreetMap': osm}, null,
   { position: 'bottomleft' }).addTo(map);
-
-// (Broad category → individual member names loaded from ecosystem_hierarchy.json)
 
 // ── Ecosystem bounding boxes (WGS84: [minLng, minLat, maxLng, maxLat]) ──────
 const ECO_BOUNDS = {
@@ -639,20 +660,19 @@ const ECO_BOUNDS = {
 // ── State ─────────────────────────────────────────────────────────────
 let thresholds = [4, 8, 12, 17];
 let pixelValues = null;
-let ecoMask    = null;    // Uint8Array of individual eco IDs (1–162; 0=outside)
-let hierarchy  = null;    // {individual:{id→name}, regional:{name→[members]}, individual_to_regional:{name→regional}}
-let indivIdMap = {};      // EnglishNam → numeric id
+let ecoMask    = null;
+let hierarchy  = null;
+let indivIdMap = {};
 let selectedEcoIds = new Set();
 let rasterW = 0, rasterH = 0;
 let rasterBounds = null;
 let imageOverlay = null;
-let histograms        = {};  // regional:  {Regional_E → {counts, total}}
-let histogramsIndiv   = {};  // individual: {EnglishNam → {counts, total}}
+let histograms        = {};
+let histogramsIndiv   = {};
 let selectedEco  = '';
 let ecoMode      = 'individual';
 
-// ── Color lookup table (0–25 → pre-parsed RGBA per threshold set) ─────
-// Built from CLASS_COLORS + CLASS_OPACITY as a Uint8Array for fast canvas writes
+// ── Color lookup table ────────────────────────────────────────────────
 function buildColorLUT() {
   const a = Math.round(CLASS_OPACITY * 255);
   const lut = new Uint8Array(26 * 4);
@@ -673,7 +693,7 @@ function buildColorLUT() {
   return lut;
 }
 
-// ── Draw pixel values to canvas → blob URL → update imageOverlay ──────
+// ── Render overlay ────────────────────────────────────────────────────
 function renderOverlay() {
   if (!pixelValues) return;
   const canvas = document.createElement('canvas');
@@ -681,19 +701,15 @@ function renderOverlay() {
   canvas.height = rasterH;
   const ctx  = canvas.getContext('2d');
   const img  = ctx.createImageData(rasterW, rasterH);
-  const rgba = new Uint32Array(img.data.buffer);  // write 4 bytes at once
+  const rgba = new Uint32Array(img.data.buffer);
   const lut  = buildColorLUT();
-  const nodata = 255;
   const n = rasterW * rasterH;
 
-  // Build a 256-entry Uint32Array LUT (ABGR byte order on little-endian)
   const lut32 = new Uint32Array(256);
   for (let v = 0; v <= 25; v++) {
     const i = v * 4;
-    // ImageData is RGBA in memory; Uint32 on little-endian reads as ABGR
     lut32[v] = (lut[i+3] << 24) | (lut[i+2] << 16) | (lut[i+1] << 8) | lut[i];
   }
-  // v >= 26 or v === nodata → transparent (lut32[v] stays 0)
 
   const filterEco = selectedEcoIds.size > 0;
   for (let i = 0; i < n; i++) {
@@ -701,11 +717,9 @@ function renderOverlay() {
     if (filterEco && ecoMask && !selectedEcoIds.has(ecoMask[i])) continue;
     const v = pixelValues[i];
     if (v < 26) rgba[i] = lut32[v];
-    // else transparent (already 0 from createImageData)
   }
   ctx.putImageData(img, 0, 0);
 
-  // Use blob URL to avoid large data: strings in the DOM
   canvas.toBlob(blob => {
     const url = URL.createObjectURL(blob);
     if (imageOverlay) {
@@ -715,24 +729,21 @@ function renderOverlay() {
     } else {
       imageOverlay = L.imageOverlay(url, rasterBounds, { opacity: 1, interactive: false });
       imageOverlay.addTo(map);
-      // Prevent browser bilinear upscaling — keep pixels crisp when zoomed in
       imageOverlay.getElement().style.imageRendering = 'pixelated';
     }
   }, 'image/png');
 }
 
-// ── Load fire count PNG (R channel = fire count 0–25, A=0 for nodata) ─
-// Bounds hardcoded from rasterio — avoids needing a separate JSON fetch
+// ── Load fire PNG ─────────────────────────────────────────────────────
 const RASTER_BOUNDS = L.latLngBounds(
-  [-26.869507, 29.983466],   // SW corner [lat, lng]  — Mercator-reprojected
-  [-10.467410, 41.487434]    // NE corner [lat, lng]
+  [-26.869507, 29.983466],
+  [-10.467410, 41.487434]
 );
 
 document.getElementById('loading').classList.remove('hidden');
 
 const _img = new Image();
 _img.onload = function() {
-  // Draw to off-screen canvas and read pixel data
   const _c = document.createElement('canvas');
   _c.width = this.naturalWidth; _c.height = this.naturalHeight;
   const _ctx = _c.getContext('2d');
@@ -743,13 +754,11 @@ _img.onload = function() {
   rasterH = _c.height;
   rasterBounds = RASTER_BOUNDS;
 
-  // R channel = fire count (0–25); A=0 means nodata → store as 255
   pixelValues = new Uint8Array(rasterW * rasterH);
   for (let i = 0, n = rasterW * rasterH; i < n; i++) {
     pixelValues[i] = raw[i * 4 + 3] === 0 ? 255 : raw[i * 4];
   }
 
-  // Load ecosystem mask after fire PNG is ready, then render both together
   const _ecoImg = new Image();
   _ecoImg.onload = function() {
     const _ec = document.createElement('canvas');
@@ -766,7 +775,6 @@ _img.onload = function() {
     updateGradientBar();
   };
   _ecoImg.onerror = () => {
-    // mask failed — still render fire without clipping
     renderOverlay();
     document.getElementById('loading').classList.add('hidden');
     updateGradientBar();
@@ -779,8 +787,8 @@ _img.onerror = () => {
 };
 _img.src = 'data/fire_count_500m.png';
 
-// ── Load hierarchy + histograms + AGB data, then populate dropdown ────
-let agbData = {};  // EnglishNam|Regional_E → { "0":{median,q25,q75,n}, ... }
+// ── Load hierarchy + histograms + AGB ─────────────────────────────────
+let agbData = {};
 
 Promise.all([
   fetch('data/ecosystem_hierarchy.json').then(r => r.json()),
@@ -791,7 +799,6 @@ Promise.all([
   hierarchy       = hier;
   histograms      = hRegional;
   histogramsIndiv = hIndiv;
-  // flatten: individual names + _regional keys
   const regional = agb['_regional'] || {};
   agbData = { ...agb, ...regional };
   delete agbData['_regional'];
@@ -804,7 +811,7 @@ function populateDropdown() {
   if (!hierarchy) return;
   const sel = document.getElementById('ecoSelect');
   const prev = sel.value;
-  sel.innerHTML = '<option value="">All ecosystems</option>';
+  sel.innerHTML = `<option value="">${T('all_ecosystems')}</option>`;
 
   Object.entries(hierarchy.regional).sort(([a],[b]) => a.localeCompare(b)).forEach(([regional, members]) => {
     const grp = document.createElement('optgroup');
@@ -820,6 +827,15 @@ function populateDropdown() {
   else { sel.value = ''; applyEcoSelection(''); }
 }
 
+// Re-populate dropdown on language change (to update the "All ecosystems" option)
+onLangChange(() => {
+  if (hierarchy) populateDropdown();
+  // Update stats summary placeholder text if no ecosystem selected
+  if (!selectedEco) {
+    document.getElementById('statsSummary').textContent = T('select_eco_stats');
+  }
+});
+
 function applyEcoSelection(name) {
   selectedEco = name;
   selectedEcoIds.clear();
@@ -830,7 +846,6 @@ function applyEcoSelection(name) {
       if (id != null) selectedEcoIds.add(id);
     });
 
-    // union of individual ECO_BOUNDS across members
     const allBounds = members.map(m => ECO_BOUNDS[m]).filter(Boolean);
     if (allBounds.length) {
       const minLng = Math.min(...allBounds.map(b => b[0]));
@@ -852,7 +867,6 @@ const sliders = ['t1','t2','t3','t4'];
 sliders.forEach((id, i) => {
   const el = document.getElementById(id);
   el.addEventListener('input', () => {
-    // enforce ordering t1 < t2 < t3 < t4
     let vals = sliders.map(s => parseInt(document.getElementById(s).value));
     for (let j = 0; j < 3; j++) {
       if (vals[j+1] <= vals[j]) { vals[j+1] = vals[j]+1; document.getElementById(sliders[j+1]).value = vals[j+1]; }
@@ -874,11 +888,7 @@ function refreshLayer() {
 let ecoHoverLayer = null;
 fetch('data/ecosystems.geojson').then(r => r.json()).then(geojson => {
   ecoHoverLayer = L.geoJSON(geojson, {
-    style: {
-      color: 'transparent',
-      weight: 0,
-      fillOpacity: 0,
-    },
+    style: { color: 'transparent', weight: 0, fillOpacity: 0 },
     onEachFeature: (feature, layer) => {
       const name = feature.properties.EnglishNam;
       layer.on('mouseover', function() {
@@ -904,17 +914,10 @@ fetch('data/ecosystems.geojson').then(r => r.json()).then(geojson => {
 let fireProvincesLayer = null;
 fetch('data/moz_provinces.geojson').then(r => r.json()).then(geojson => {
   fireProvincesLayer = L.geoJSON(geojson, {
-    style: {
-      color: '#ffffff',
-      weight: 1.8,
-      opacity: 0.6,
-      fillOpacity: 0,
-      dashArray: '5 4',
-    },
+    style: { color: '#ffffff', weight: 1.8, opacity: 0.6, fillOpacity: 0, dashArray: '5 4' },
     onEachFeature: (feature, layer) => {
       layer.bindTooltip(feature.properties.name, {
-        permanent: false, direction: 'center',
-        className: 'province-label'
+        permanent: false, direction: 'center', className: 'province-label'
       });
     }
   });
@@ -926,14 +929,32 @@ document.getElementById('toggleProvincesF').addEventListener('change', e => {
   else map.removeLayer(fireProvincesLayer);
 });
 
+// ── District boundaries ───────────────────────────────────────────────
+let fireDistrictsLayer = null;
+fetch('data/moz_districts.geojson').then(r => r.json()).then(geojson => {
+  fireDistrictsLayer = L.geoJSON(geojson, {
+    style: { color: '#ffffff', weight: 0.9, opacity: 0.45, fillOpacity: 0, dashArray: '3 3' },
+    onEachFeature: (feature, layer) => {
+      const name = feature.properties.name;
+      const prov = feature.properties.province;
+      layer.bindTooltip(`${name}${prov ? ' (' + prov + ')' : ''}`, {
+        permanent: false, direction: 'center', className: 'district-label'
+      });
+    }
+  });
+});
+
+document.getElementById('toggleDistrictsF').addEventListener('change', e => {
+  if (!fireDistrictsLayer) return;
+  if (e.target.checked) fireDistrictsLayer.addTo(map);
+  else map.removeLayer(fireDistrictsLayer);
+});
+
 // ── Fire layer toggle ─────────────────────────────────────────────────
 document.getElementById('toggleFire').addEventListener('change', e => {
   if (imageOverlay) {
-    if (e.target.checked) {
-      imageOverlay.addTo(map);
-    } else {
-      imageOverlay.remove();
-    }
+    if (e.target.checked) imageOverlay.addTo(map);
+    else imageOverlay.remove();
   }
 });
 
@@ -942,7 +963,7 @@ document.getElementById('ecoSelect').addEventListener('change', e => {
   applyEcoSelection(e.target.value);
 });
 
-// ── Classify a fire count value → class index 0–4 ────────────────────
+// ── Classify a fire count value ───────────────────────────────────────
 function getClass(v) {
   if (v <= thresholds[0]) return 0;
   if (v <= thresholds[1]) return 1;
@@ -971,7 +992,6 @@ function updateStats() {
     for (let v = 0; v <= 25; v++) classCounts[getClass(v)] += mergedCounts[v];
   }
 
-  // build class labels from current thresholds
   const labels = [
     `0 – ${thresholds[0]} fires`,
     `${thresholds[0]+1} – ${thresholds[1]} fires`,
@@ -1003,26 +1023,19 @@ function updateStats() {
       ${Number(total).toLocaleString()} pixels at 100 m (~${Number(total).toLocaleString()} ha)<br>
       <strong>${low}%</strong> Unburned/Low &nbsp;·&nbsp; <strong>${extreme}%</strong> Extreme`;
   } else if (!eco) {
-    summary.textContent = 'Select an ecosystem to see area statistics.';
+    summary.textContent = T('select_eco_stats');
   } else {
     summary.textContent = `No histogram data for "${eco}".`;
   }
 }
 
-// ── Gradient bar (map legend) ─────────────────────────────────────────
+// ── Gradient bar ──────────────────────────────────────────────────────
 function updateGradientBar() {
   const bar    = document.getElementById('grad-bar');
   const labels = document.getElementById('grad-labels');
 
-  // build gradient segments proportional to threshold spans (out of 21)
   const MAX = 21;
   const bounds = [0, thresholds[0], thresholds[1], thresholds[2], thresholds[3], MAX];
-  const segments = [];
-  for (let i = 0; i < 5; i++) {
-    const w = ((bounds[i+1] - bounds[i]) / MAX * 100).toFixed(1);
-    segments.push(`${CLASS_COLORS[i]} ${w}%`);
-  }
-  // build step gradient
   let grad = 'linear-gradient(to right';
   let acc = 0;
   for (let i = 0; i < 5; i++) {
@@ -1032,15 +1045,11 @@ function updateGradientBar() {
   }
   grad += ')';
   bar.style.background = grad;
-
   labels.innerHTML = `<span>0</span><span>${thresholds[0]}</span><span>${thresholds[1]}</span><span>${thresholds[2]}</span><span>${thresholds[3]}</span><span>21</span>`;
 }
 
 // ── AGB chart ─────────────────────────────────────────────────────────
-// Aggregate per-fire-count AGB stats into current threshold-defined classes
 function aggregateAgbByClass(cntData) {
-  // cntData: { "0":{median,q25,q75,n}, "1":..., ..., "25":... }
-  // Returns array of 5 class objects (or null if no data)
   const breaks = [0, thresholds[0], thresholds[1], thresholds[2], thresholds[3], 25];
   const result = [];
   for (let c = 0; c < 5; c++) {
@@ -1055,7 +1064,6 @@ function aggregateAgbByClass(cntData) {
       totalN += s.n;
     }
     if (meds.length === 0) { result.push(null); continue; }
-    // Weighted-median approximation: simple median of medians (sufficient for display)
     meds.sort((a,b)=>a-b); q25s.sort((a,b)=>a-b); q75s.sort((a,b)=>a-b);
     const mid = i => i[Math.floor(i.length/2)];
     result.push({ median: mid(meds), q25: mid(q25s), q75: mid(q75s), n: totalN });
@@ -1076,11 +1084,9 @@ function updateAgbChart() {
   section.classList.add('visible');
 
   const clsStats = aggregateAgbByClass(cntData);
-  // Only render classes that have data
   const clsKeys = [0,1,2,3,4].filter(i => clsStats[i] !== null);
   const values  = clsKeys.map(i => clsStats[i]);
 
-  // Canvas sizing
   const dpr = window.devicePixelRatio || 1;
   const W   = canvas.parentElement.clientWidth || 280;
   const H   = 130;
@@ -1091,14 +1097,12 @@ function updateAgbChart() {
   const ctx = canvas.getContext('2d');
   ctx.scale(dpr, dpr);
 
-  // Layout
   const padL = 36, padR = 8, padT = 10, padB = 28;
   const plotW = W - padL - padR;
   const plotH = H - padT - padB;
 
   ctx.clearRect(0, 0, W, H);
 
-  // Y scale: span all q25–q75 + some margin
   const allVals = values.flatMap(s => [s.q25, s.q75, s.median]);
   const yMin = Math.max(0, Math.min(...allVals) * 0.85);
   const yMax = Math.max(...allVals) * 1.12;
@@ -1106,7 +1110,6 @@ function updateAgbChart() {
 
   const toY = v => padT + plotH * (1 - (v - yMin) / yRange);
 
-  // Grid lines
   const nTicks = 4;
   ctx.strokeStyle = '#2e3540';
   ctx.lineWidth = 0.8;
@@ -1120,7 +1123,6 @@ function updateAgbChart() {
     ctx.fillText(Math.round(v), padL - 4, y + 3.5);
   }
 
-  // Y-axis label
   ctx.save();
   ctx.translate(9, padT + plotH / 2);
   ctx.rotate(-Math.PI / 2);
@@ -1133,7 +1135,6 @@ function updateAgbChart() {
   const barW = Math.min(32, plotW / clsKeys.length * 0.55);
   const gap  = plotW / clsKeys.length;
 
-  // Dynamic x-axis labels based on current thresholds
   const breaks = [0, thresholds[0], thresholds[1], thresholds[2], thresholds[3], 25];
   const clsLabels = [
     `0–${breaks[1]}`,
@@ -1148,30 +1149,25 @@ function updateAgbChart() {
     const cx    = padL + gap * i + gap / 2;
     const color = CLASS_COLORS[classIdx];
 
-    // IQR bar (Q25–Q75)
     const yQ25 = toY(s.q25);
     const yQ75 = toY(s.q75);
     ctx.fillStyle = color + '55';
     ctx.fillRect(cx - barW / 2, yQ75, barW, yQ25 - yQ75);
 
-    // Median line
     const yMed = toY(s.median);
     ctx.strokeStyle = color;
     ctx.lineWidth = 2.5;
     ctx.beginPath(); ctx.moveTo(cx - barW / 2, yMed); ctx.lineTo(cx + barW / 2, yMed); ctx.stroke();
 
-    // Median value label
     ctx.fillStyle = '#c8c4bc';
     ctx.font = '8.5px -apple-system,sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText(s.median.toFixed(0), cx, yMed - 5);
 
-    // X-axis label
     ctx.fillStyle = '#7a8495';
     ctx.font = '8px -apple-system,sans-serif';
     ctx.fillText(clsLabels[classIdx], cx, H - padB + 12);
 
-    // n label
     ctx.fillStyle = '#3a4250';
     ctx.font = '7px -apple-system,sans-serif';
     ctx.fillText(`n=${s.n > 999 ? (s.n/1000).toFixed(1)+'k' : s.n}`, cx, H - padB + 22);
@@ -1186,7 +1182,7 @@ updateGradientBar();
 const FIRE_FEEDBACK_URL = "https://script.google.com/macros/s/AKfycbxEEhaEMwAalBNbXbtj7f7YBZ9-hdoo5XRoOwJibF53EpGI09Xo-irZE5MA0XBZkYND/exec";
 
 function openFireFeedback() {
-  const eco = document.getElementById('ecoSelect').value || 'All ecosystems';
+  const eco = document.getElementById('ecoSelect').value || T('all_ecosystems');
   document.getElementById('fireFbEco').value = eco;
   document.getElementById('fireFbStatus').textContent = '';
   document.getElementById('fireFeedbackPanel').style.display = 'block';
@@ -1225,7 +1221,6 @@ document.getElementById('fireFbSubmit').addEventListener('click', () => {
   }).then(() => {
     document.getElementById('fireFbStatus').textContent = 'Submitted. Thank you!';
     document.getElementById('fireFbStatus').style.color = '#2d6a4f';
-    // Add to sidebar list
     const list = document.getElementById('fireFeedbackList');
     const item = document.createElement('div');
     item.style.cssText = 'border-top:1px solid #2e3540;padding-top:6px;margin-top:6px;';
@@ -1241,6 +1236,11 @@ document.getElementById('fireFbSubmit').addEventListener('click', () => {
 
 document.getElementById('fire-modal-close').addEventListener('click', () => {
   document.getElementById('modal-overlay').classList.add('hidden');
+});
+
+// ── Language toggle ───────────────────────────────────────────────────
+document.getElementById('fireLangBtn').addEventListener('click', () => {
+  setLang(window.CURRENT_LANG === 'en' ? 'pt' : 'en');
 });
 </script>
 </body>

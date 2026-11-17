@@ -457,3 +457,14 @@ button:hover { filter: brightness(1.1); }
   pointer-events: none;
 }
 .province-tooltip::before { display: none; }
+
+.district-tooltip {
+  background: rgba(20,20,60,0.75);
+  border: none;
+  border-radius: 3px;
+  color: #dde;
+  font-size: 11px;
+  padding: 2px 6px;
+  pointer-events: none;
+}
+.district-tooltip::before { display: none; }

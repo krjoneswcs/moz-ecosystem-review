@@ -88,6 +88,34 @@ document.getElementById('toggleProvinces').addEventListener('change', e => {
   else map.removeLayer(provincesLayer);
 });
 
+// ── District boundaries ───────────────────────────────────────────────
+let districtsLayer = null;
+fetch('data/moz_districts.geojson').then(r => r.json()).then(geojson => {
+  districtsLayer = L.geoJSON(geojson, {
+    style: {
+      color: '#ffffff',
+      weight: 0.9,
+      opacity: 0.5,
+      fillOpacity: 0,
+      dashArray: '3 3',
+    },
+    onEachFeature: (feature, layer) => {
+      const name = feature.properties.name;
+      const prov = feature.properties.province;
+      layer.bindTooltip(`${name}${prov ? ' (' + prov + ')' : ''}`, {
+        permanent: false, direction: 'center',
+        className: 'district-tooltip'
+      });
+    }
+  });
+});
+
+document.getElementById('toggleDistricts').addEventListener('change', e => {
+  if (!districtsLayer) return;
+  if (e.target.checked) districtsLayer.addTo(map);
+  else map.removeLayer(districtsLayer);
+});
+
 // ---------------------------------------------------------------------
 // Reference site polygons (vectorized from the 25m raster, reprojected
 // with pyproj so they align exactly with the ecosystem-type boundaries and
