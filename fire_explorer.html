@@ -1239,6 +1239,7 @@ document.getElementById('fire-modal-close').addEventListener('click', () => {
 });
 
 // ── Language toggle ───────────────────────────────────────────────────
+setLang(window.CURRENT_LANG);
 document.getElementById('fireLangBtn').addEventListener('click', () => {
   setLang(window.CURRENT_LANG === 'en' ? 'pt' : 'en');
 });

@@ -226,6 +226,7 @@ document.getElementById('callout-close').addEventListener('click', () => {
 });
 
 // ── Language toggle ──────────────────────────────────────────────────
+setLang(window.CURRENT_LANG);
 document.getElementById('langToggleBtn').addEventListener('click', () => {
   setLang(window.CURRENT_LANG === 'en' ? 'pt' : 'en');
 });
