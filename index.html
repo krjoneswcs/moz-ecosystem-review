@@ -244,7 +244,7 @@ body {
 <script src="lang.js"></script>
 <script>
   // Apply saved language on load
-  if (window.CURRENT_LANG !== 'en') setLang(window.CURRENT_LANG);
+  setLang(window.CURRENT_LANG);
 
   document.getElementById('landingLangBtn').addEventListener('click', () => {
     setLang(window.CURRENT_LANG === 'en' ? 'pt' : 'en');

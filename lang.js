@@ -5,7 +5,7 @@
 
 // Load saved language preference, default to 'en'
 window.CURRENT_LANG = (function() {
-  try { return localStorage.getItem('moz_lang') || 'en'; } catch(e) { return 'en'; }
+  try { return localStorage.getItem('moz_lang') || 'pt'; } catch(e) { return 'pt'; }
 })();
 
 const TRANSLATIONS = {
